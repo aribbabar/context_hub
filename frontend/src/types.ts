@@ -58,6 +58,15 @@ export type SettingsResponse = {
   ollama: OllamaStatus
 }
 
+export type DocsMcpDefaultsInstallResult = {
+  config_path: string
+  store_path: string
+  embedding_model: string
+  env_vars: Record<string, string>
+  commands: string[][]
+  restart_required: boolean
+}
+
 export type SourceRegistrationResponse = {
   source: SourceRecord
   command_preview: string[]

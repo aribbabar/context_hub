@@ -6,6 +6,7 @@ import { SettingsPage } from './pages/SettingsPage/SettingsPage'
 import { SourcesPage } from './pages/SourcesPage/SourcesPage'
 import { classNames } from './utils/classNames'
 import type {
+  DocsMcpDefaultsInstallResult,
   EmbeddingSettings,
   IndexJob,
   Message,
@@ -60,6 +61,8 @@ function App() {
   const [searchOutput, setSearchOutput] = useState('')
   const [isSearching, setIsSearching] = useState(false)
   const [isSavingSettings, setIsSavingSettings] = useState(false)
+  const [isInstallingDocsMcpDefaults, setIsInstallingDocsMcpDefaults] = useState(false)
+  const [docsMcpDefaults, setDocsMcpDefaults] = useState<DocsMcpDefaultsInstallResult | null>(null)
 
   const sortedSources = useMemo(
     () =>
@@ -347,6 +350,33 @@ function App() {
     }
   }
 
+  async function installDocsMcpDefaults() {
+    setIsInstallingDocsMcpDefaults(true)
+    setMessage(null)
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/settings/docs-mcp-defaults`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const detail = await response.text()
+        throw new Error(detail || 'Unable to configure docs-mcp defaults')
+      }
+
+      const payload = (await response.json()) as DocsMcpDefaultsInstallResult
+      setDocsMcpDefaults(payload)
+      setMessage({ text: 'docs-mcp defaults configured', tone: 'success' })
+    } catch (error) {
+      setMessage({
+        text: error instanceof Error ? error.message : 'Unable to configure docs-mcp defaults',
+        tone: 'error',
+      })
+    } finally {
+      setIsInstallingDocsMcpDefaults(false)
+    }
+  }
+
   return (
     <div className={classNames(styles.appShell, activeView === 'settings' && styles.appShellSettings)}>
       <AppHeader activeView={activeView} apiStatus={apiStatus} onNavigate={setActiveView} />
@@ -392,10 +422,13 @@ function App() {
 
       {activeView === 'settings' ? (
         <SettingsPage
+          docsMcpDefaults={docsMcpDefaults}
           embeddingSettings={embeddingSettings}
+          isInstallingDocsMcpDefaults={isInstallingDocsMcpDefaults}
           isSavingSettings={isSavingSettings}
           message={message}
           ollamaStatus={ollamaStatus}
+          onInstallDocsMcpDefaults={installDocsMcpDefaults}
           onSaveSettings={saveEmbeddingSettings}
           onSettingsChange={setEmbeddingSettings}
         />

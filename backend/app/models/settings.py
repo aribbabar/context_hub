@@ -24,3 +24,12 @@ class OllamaStatus(BaseModel):
     version: str | None = None
     models: list[str] = Field(default_factory=list)
     error: str | None = None
+
+
+class DocsMcpDefaultsInstallResult(BaseModel):
+    config_path: str
+    store_path: str
+    embedding_model: str
+    env_vars: dict[str, str]
+    commands: list[list[str]]
+    restart_required: bool = True

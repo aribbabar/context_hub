@@ -1,26 +1,40 @@
-import type { EmbeddingMode, EmbeddingSettings, FormSubmitHandler, Message, OllamaStatus } from '../../types'
+import type {
+  DocsMcpDefaultsInstallResult,
+  EmbeddingMode,
+  EmbeddingSettings,
+  FormSubmitHandler,
+  Message,
+  OllamaStatus,
+} from '../../types'
 import { MessageLine } from '../../components/ui/MessageLine/MessageLine'
 import { PageHeading } from '../../components/ui/PageHeading/PageHeading'
 import styles from './SettingsPage.module.css'
 
 type SettingsPageProps = {
+  docsMcpDefaults: DocsMcpDefaultsInstallResult | null
   embeddingSettings: EmbeddingSettings
+  isInstallingDocsMcpDefaults: boolean
   isSavingSettings: boolean
   message: Message
   ollamaStatus: OllamaStatus | null
+  onInstallDocsMcpDefaults: () => void
   onSaveSettings: FormSubmitHandler
   onSettingsChange: (settings: EmbeddingSettings) => void
 }
 
 export function SettingsPage({
+  docsMcpDefaults,
   embeddingSettings,
+  isInstallingDocsMcpDefaults,
   isSavingSettings,
   message,
   ollamaStatus,
+  onInstallDocsMcpDefaults,
   onSaveSettings,
   onSettingsChange,
 }: SettingsPageProps) {
   const isDisabled = embeddingSettings.mode === 'disabled'
+  const canInstallDocsMcpDefaults = embeddingSettings.mode === 'ollama'
 
   return (
     <main>
@@ -97,6 +111,45 @@ export function SettingsPage({
           <MessageLine message={message} />
         </form>
       </section>
+
+      <section className={styles.settingsCard} aria-labelledby="docs-mcp-defaults-title">
+        <h2 id="docs-mcp-defaults-title">Agent search defaults</h2>
+        <p className={styles.cardText}>
+          Configure bare docs-mcp commands to use this Context Hub store and the selected Ollama embedding model.
+        </p>
+
+        <dl className={styles.defaultGrid}>
+          <StatusCell label="Store path" value="Context Hub docs-mcp store" />
+          <StatusCell
+            label="Embedding model"
+            value={canInstallDocsMcpDefaults ? `openai:${embeddingSettings.ollama_model}` : 'Enable Ollama first'}
+          />
+          <StatusCell
+            label="OpenAI-compatible URL"
+            value={canInstallDocsMcpDefaults ? `${embeddingSettings.ollama_base_url.replace(/\/$/, '')}/v1` : '-'}
+          />
+        </dl>
+
+        <button
+          className={styles.secondaryButton}
+          disabled={!canInstallDocsMcpDefaults || isInstallingDocsMcpDefaults}
+          onClick={onInstallDocsMcpDefaults}
+          type="button"
+        >
+          {isInstallingDocsMcpDefaults ? 'Configuring' : 'Configure docs-mcp defaults'}
+        </button>
+
+        {docsMcpDefaults ? (
+          <div className={styles.installSummary} aria-live="polite">
+            <dl>
+              <SummaryRow label="Config" value={docsMcpDefaults.config_path} />
+              <SummaryRow label="Store" value={docsMcpDefaults.store_path} />
+              <SummaryRow label="Model" value={docsMcpDefaults.embedding_model} />
+            </dl>
+            <p>Restart terminals and agent sessions before expecting new bare docs-mcp commands to inherit the environment.</p>
+          </div>
+        ) : null}
+      </section>
     </main>
   )
 }
@@ -104,6 +157,15 @@ export function SettingsPage({
 function StatusCell({ label, value }: { label: string; value: string }) {
   return (
     <div className={styles.statusCell}>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  )
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
       <dt>{label}</dt>
       <dd>{value}</dd>
     </div>

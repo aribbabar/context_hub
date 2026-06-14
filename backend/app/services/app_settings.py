@@ -1,12 +1,19 @@
 import json
 import os
 import subprocess
+from pathlib import Path
 from shutil import which
 from urllib.error import URLError
 from urllib.request import urlopen
 
 from app.core.config import get_settings
-from app.models.settings import AppSettingsRecord, EmbeddingMode, EmbeddingSettings, OllamaStatus
+from app.models.settings import (
+    AppSettingsRecord,
+    DocsMcpDefaultsInstallResult,
+    EmbeddingMode,
+    EmbeddingSettings,
+    OllamaStatus,
+)
 
 
 class AppSettingsStore:
@@ -44,6 +51,37 @@ class AppSettingsStore:
         if embeddings.mode == EmbeddingMode.OLLAMA:
             return {"embeddingModel": f"openai:{embeddings.ollama_model}"}
         return {"embeddingModel": "text-embedding-3-small"}
+
+    def install_docs_mcp_defaults(self) -> DocsMcpDefaultsInstallResult:
+        embeddings = self.get().embeddings
+        if embeddings.mode != EmbeddingMode.OLLAMA:
+            raise ValueError("Enable Ollama embeddings before configuring docs-mcp defaults")
+
+        embedding_model = f"openai:{embeddings.ollama_model}"
+        openai_base = f"{embeddings.ollama_base_url.rstrip('/')}/v1"
+        env_vars = {
+            "DOCS_MCP_STORE_PATH": str(self.settings.docs_mcp_store_dir),
+            "DOCS_MCP_EMBEDDING_MODEL": embedding_model,
+            "OPENAI_API_BASE": openai_base,
+            "OPENAI_API_KEY": "ollama",
+        }
+
+        commands = [
+            self._run_docs_mcp_config_set("app.storePath", str(self.settings.docs_mcp_store_dir)),
+            self._run_docs_mcp_config_set("app.embeddingModel", embedding_model),
+        ]
+
+        for key, value in env_vars.items():
+            self._persist_user_env(key, value)
+            os.environ[key] = value
+
+        return DocsMcpDefaultsInstallResult(
+            config_path=str(self._default_docs_mcp_config_path()),
+            store_path=str(self.settings.docs_mcp_store_dir),
+            embedding_model=embedding_model,
+            env_vars=env_vars,
+            commands=commands,
+        )
 
     def get_ollama_status(self) -> OllamaStatus:
         executable = which("ollama")
@@ -98,3 +136,58 @@ class AppSettingsStore:
             "AZURE_OPENAI_API_VERSION",
         ):
             env.pop(key, None)
+
+    def _run_docs_mcp_config_set(self, path: str, value: str) -> list[str]:
+        npm_command = which("npm.cmd") or which("npm") or "npm"
+        command = [
+            npm_command,
+            "--silent",
+            "run",
+            "cli",
+            "--",
+            "config",
+            "set",
+            path,
+            value,
+            "--quiet",
+        ]
+        completed = subprocess.run(
+            command,
+            cwd=self.settings.docs_mcp_dir,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=30,
+            check=False,
+        )
+        if completed.returncode != 0:
+            detail = (completed.stderr or completed.stdout or "").strip()
+            raise RuntimeError(f"docs-mcp config update failed for {path}: {detail}")
+        return command
+
+    def _persist_user_env(self, key: str, value: str) -> None:
+        if os.name == "nt":
+            completed = subprocess.run(
+                ["setx", key, value],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=15,
+                check=False,
+            )
+            if completed.returncode != 0:
+                detail = (completed.stderr or completed.stdout or "").strip()
+                raise RuntimeError(f"Unable to persist {key}: {detail}")
+            return
+
+        raise RuntimeError("Persistent user environment setup is only implemented on Windows")
+
+    def _default_docs_mcp_config_path(self) -> Path:
+        if os.name == "nt":
+            appdata = os.environ.get("APPDATA")
+            if appdata:
+                return Path(appdata) / "docs-mcp-server" / "Config" / "config.yaml"
+
+        return Path.home() / ".config" / "docs-mcp-server" / "config.yaml"
