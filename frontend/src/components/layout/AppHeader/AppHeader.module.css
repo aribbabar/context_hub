@@ -1,0 +1,113 @@
+.topbar {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 56px;
+}
+
+.topbarSources {
+  margin-bottom: 36px;
+}
+
+.topbarSettings {
+  margin-bottom: 44px;
+}
+
+.brand {
+  align-items: center;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: 12px;
+  padding: 0;
+}
+
+.brandMark {
+  background: var(--accent);
+  border-radius: 8px;
+  color: #fff;
+  display: grid;
+  font-size: 14px;
+  font-weight: 700;
+  height: 32px;
+  place-items: center;
+  width: 32px;
+}
+
+.brandName {
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.topbarNav {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.topbarNav button {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 12px;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.topbarNav button:hover,
+.topbarNav button.current {
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.statusPill {
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 7px;
+  letter-spacing: 0;
+  padding: 6px 10px;
+  text-transform: capitalize;
+}
+
+.statusPill::before {
+  background: var(--warning);
+  border-radius: 50%;
+  content: '';
+  height: 7px;
+  width: 7px;
+}
+
+.online::before {
+  background: var(--success);
+}
+
+.offline::before {
+  background: var(--danger);
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    flex-wrap: wrap;
+  }
+
+  .topbarNav {
+    order: 3;
+    width: 100%;
+  }
+}

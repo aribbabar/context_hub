@@ -1,0 +1,17 @@
+.appShell {
+  margin: 0 auto;
+  max-width: 1200px;
+  min-height: 100svh;
+  padding: 28px 24px 48px;
+}
+
+.appShellSettings {
+  max-width: 720px;
+  padding-bottom: 64px;
+}
+
+@media (max-width: 720px) {
+  .appShell {
+    padding: 24px 18px 40px;
+  }
+}

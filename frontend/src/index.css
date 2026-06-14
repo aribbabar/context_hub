@@ -1,24 +1,22 @@
 :root {
-  --accent: #2563eb;
-  --accent-soft: #dbeafe;
-  --accent-strong: #1d4ed8;
-  --bg: #fbfbf8;
-  --border: #ddded8;
-  --code-bg: #111827;
-  --danger: #dc2626;
-  --muted: #6b7280;
-  --shadow-soft: 0 1px 2px rgba(17, 24, 39, 0.08);
-  --success: #16a34a;
-  --surface: #f1f2ed;
-  --text: #111827;
-  --warning: #d97706;
+  --accent: oklch(58% 0.16 190);
+  --accent-soft: oklch(93% 0.04 190);
+  --bg: oklch(99% 0.002 240);
+  --border: oklch(92% 0.005 250);
+  --danger: oklch(58% 0.18 25);
+  --fg: oklch(18% 0.012 250);
+  --muted: oklch(54% 0.012 250);
+  --success: oklch(58% 0.14 150);
+  --surface: oklch(100% 0 0);
+  --warning: oklch(70% 0.12 85);
 
-  --sans: Inter, ui-sans-serif, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
-  --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, Menlo, monospace;
 
   background: var(--bg);
-  color: var(--text);
-  font: 16px/1.5 var(--sans);
+  color: var(--fg);
+  font: 16px/1.5 var(--font-body);
   font-synthesis: none;
   letter-spacing: 0;
   text-rendering: optimizeLegibility;
@@ -30,35 +28,31 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
 body {
   margin: 0;
 }
 
 button,
-input {
+input,
+select {
   letter-spacing: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
 h1,
 h2,
 p {
   margin: 0;
-}
-
-h1 {
-  font-size: clamp(34px, 5vw, 64px);
-  font-weight: 760;
-  letter-spacing: 0;
-  line-height: 0.95;
-  max-width: 720px;
-}
-
-h2 {
-  font-size: 20px;
-  font-weight: 720;
-  letter-spacing: 0;
-}
-
-#root {
-  min-height: 100svh;
 }

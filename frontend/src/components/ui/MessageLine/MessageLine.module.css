@@ -1,0 +1,13 @@
+.message {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 18px;
+}
+
+.success {
+  color: var(--success);
+}
+
+.error {
+  color: var(--danger);
+}

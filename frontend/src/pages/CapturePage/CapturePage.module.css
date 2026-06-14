@@ -1,0 +1,255 @@
+.hero {
+  margin-bottom: 48px;
+  max-width: 720px;
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 5.4vw, 64px);
+  font-weight: 650;
+  letter-spacing: 0;
+  line-height: 1.05;
+  margin-bottom: 18px;
+}
+
+.hero p {
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.55;
+  max-width: 56ch;
+}
+
+.captureCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.02);
+  margin-bottom: 40px;
+  padding: 28px;
+}
+
+.visuallyHidden {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.field label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.field input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--fg);
+  font: inherit;
+  font-size: 16px;
+  height: 52px;
+  outline: none;
+  padding: 0 14px;
+  width: 100%;
+}
+
+.field input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.pathField {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.formActions {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.hint,
+.linkButton {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.primaryButton,
+.secondaryButton {
+  appearance: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  height: 52px;
+  transition: transform 80ms ease, opacity 120ms ease, background 120ms ease, border-color 120ms ease;
+  white-space: nowrap;
+}
+
+.primaryButton {
+  background: var(--accent);
+  border: 0;
+  color: #fff;
+  font-size: 15px;
+  letter-spacing: 0;
+  padding: 0 22px;
+}
+
+.primaryButton:hover {
+  transform: translateY(-1px);
+}
+
+.primaryButton:active {
+  transform: translateY(0);
+}
+
+.secondaryButton {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font-size: 14px;
+  padding: 0 16px;
+}
+
+.secondaryButton:hover {
+  background: var(--surface);
+  border-color: var(--muted);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  cursor: wait;
+  opacity: 0.55;
+  transform: none;
+}
+
+.recentPanel {
+  margin-top: 8px;
+}
+
+.sectionHeading {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.sectionHeading h2 {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.linkButton {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 500;
+  padding: 8px 12px;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.linkButton:hover {
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.sourceList {
+  display: grid;
+  gap: 10px;
+}
+
+.sourceItem {
+  align-items: center;
+  appearance: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  padding: 14px 16px;
+  text-align: left;
+  transition: border-color 120ms ease, transform 80ms ease;
+  width: 100%;
+}
+
+.sourceItem:hover {
+  border-color: var(--muted);
+  transform: translateY(-1px);
+}
+
+.sourceMeta {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sourceMeta strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sourceMeta span {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyState {
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 14px;
+  padding: 32px 16px;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .hero h1 {
+    font-size: 34px;
+  }
+
+  .pathField {
+    grid-template-columns: 1fr;
+  }
+
+  .formActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sourceItem {
+    align-items: start;
+    grid-template-columns: 1fr;
+  }
+}
