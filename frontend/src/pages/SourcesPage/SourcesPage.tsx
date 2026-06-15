@@ -149,10 +149,11 @@ function SearchResults({ output }: { output: SearchResponse | null }) {
       return <div className={styles.emptyState}>No matching results.</div>
     }
 
+    const groupedResults = groupResultsBySource(output.results)
     return (
       <div className={styles.resultList}>
-        {output.results.map((result, index) => (
-          <ResultCard key={index} result={result} index={index} />
+        {groupedResults.map((group, index) => (
+          <ResultGroupCard key={group.key} group={group} index={index} />
         ))}
       </div>
     )
@@ -167,6 +168,17 @@ function SearchResults({ output }: { output: SearchResponse | null }) {
   }
 
   return <div className={styles.plainOutput}>{output.stdout || 'No matching results.'}</div>
+}
+
+type SearchResultRecord = Record<string, unknown>
+
+type ResultGroup = {
+  key: string
+  title: string
+  source: string | null
+  score: number | null
+  metadata: Array<[string, unknown]>
+  items: SearchResultRecord[]
 }
 
 function ResultCard({ result, index }: { result: unknown; index: number }) {
@@ -210,6 +222,114 @@ function ResultCard({ result, index }: { result: unknown; index: number }) {
       ) : null}
     </article>
   )
+}
+
+function ResultGroupCard({ group, index }: { group: ResultGroup; index: number }) {
+  const firstItem = group.items[0]
+  const metadata = group.metadata.length ? group.metadata : resultMetadata(firstItem)
+
+  return (
+    <article className={styles.resultCard}>
+      <div className={styles.resultHeader}>
+        <div>
+          <span className={styles.resultIndex}>Result {index + 1}</span>
+          <h3>{group.title}</h3>
+        </div>
+        {typeof group.score === 'number' ? <span className={styles.score}>{formatScore(group.score)}</span> : null}
+      </div>
+      {group.source ? <p className={styles.resultSource}>{group.source}</p> : null}
+      <div className={styles.excerptList}>
+        {group.items.map((item, itemIndex) => {
+          const snippet = resultSnippet(item)
+          if (!snippet) return null
+
+          return (
+            <section className={styles.excerpt} key={`${group.key}-${itemIndex}`}>
+              {group.items.length > 1 ? (
+                <span className={styles.excerptLabel}>Matching section {itemIndex + 1}</span>
+              ) : null}
+              <p className={styles.snippet}>{formatSnippet(snippet)}</p>
+            </section>
+          )
+        })}
+      </div>
+      {metadata.length ? (
+        <dl className={styles.metadataList}>
+          {metadata.slice(0, 6).map(([key, value]) => (
+            <div key={key}>
+              <dt>{humanizeKey(key)}</dt>
+              <dd>{formatValue(value)}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+    </article>
+  )
+}
+
+function groupResultsBySource(results: unknown[]): ResultGroup[] {
+  const groups: ResultGroup[] = []
+  const groupsByKey = new Map<string, ResultGroup>()
+
+  for (const [index, result] of results.entries()) {
+    if (!result || typeof result !== 'object') {
+      groups.push({
+        key: `primitive-${index}`,
+        title: `Result ${index + 1}`,
+        source: null,
+        score: null,
+        metadata: [],
+        items: [{ value: result }],
+      })
+      continue
+    }
+
+    const record = result as SearchResultRecord
+    const source = resultSource(record)
+    const key = source ?? `result-${index}`
+    const score = resultScore(record)
+    const existingGroup = groupsByKey.get(key)
+
+    if (existingGroup) {
+      existingGroup.items.push(record)
+      if (typeof score === 'number' && (existingGroup.score === null || score > existingGroup.score)) {
+        existingGroup.score = score
+      }
+      continue
+    }
+
+    const rawTitle = pickString(record, ['title', 'name', 'heading', 'url', 'source'])
+    const group = {
+      key,
+      title: formatTitle(rawTitle, source, index),
+      source,
+      score,
+      metadata: resultMetadata(record),
+      items: [record],
+    }
+    groupsByKey.set(key, group)
+    groups.push(group)
+  }
+
+  return groups
+}
+
+function resultSnippet(record: SearchResultRecord) {
+  return pickString(record, ['content', 'text', 'snippet', 'summary', 'pageContent', 'document'])
+}
+
+function resultSource(record: SearchResultRecord) {
+  return pickString(record, ['url', 'source', 'path', 'file', 'location'])
+}
+
+function resultScore(record: SearchResultRecord) {
+  return pickNumber(record, ['score', 'similarity', 'distance'])
+}
+
+function resultMetadata(record: SearchResultRecord | undefined) {
+  if (!record) return []
+
+  return Object.entries(record).filter(([key]) => !['title', 'name', 'heading', 'url', 'source', 'content', 'text', 'snippet', 'summary', 'pageContent', 'document', 'path', 'file', 'location', 'score', 'similarity', 'distance'].includes(key))
 }
 
 function pickString(record: Record<string, unknown>, keys: string[]) {
