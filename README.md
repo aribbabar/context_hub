@@ -20,7 +20,7 @@ The backend should normalize every source into an indexable artifact or location
 - Web docs: the backend crawls with `crawl4ai`, stores the cleaned crawl output under `backend/data/indexed-docs/`, then submits that stored content to `docs-mcp-server`.
 - Source registry: the wrapper stores stable source metadata, job state, and generated artifact paths under `backend/data/`.
 
-Browser folder selection has security limits: a normal web page generally cannot send an absolute local folder path to the backend. For a same-machine local app, the backend can provide a native folder-dialog endpoint or the project can later move to a desktop shell such as Tauri/Electron.
+Browser folder selection has security limits: a normal web page generally cannot send an absolute local folder path to the backend. For this same-machine local app, the Capture screen's Add folder and Add files buttons call backend native picker endpoints.
 
 ## Development
 

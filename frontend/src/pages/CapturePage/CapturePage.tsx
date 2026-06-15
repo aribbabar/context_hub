@@ -38,11 +38,13 @@ type CapturePageProps = {
   recentSources: SourceRecord[]
   localForm: LocalForm
   webForm: WebForm
+  isPickingFiles: boolean
   isPickingFolder: boolean
   isSubmitting: boolean
   onModeChange: (mode: SourceMode) => void
   onLocalFormChange: (form: LocalForm) => void
   onWebFormChange: (form: WebForm) => void
+  onPickFiles: () => void
   onPickFolder: () => void
   onRemoveLocalPath: (path: string) => void
   onRegisterLocal: FormSubmitHandler
@@ -87,11 +89,13 @@ export function CapturePage({
   recentSources,
   localForm,
   webForm,
+  isPickingFiles,
   isPickingFolder,
   isSubmitting,
   onModeChange,
   onLocalFormChange,
   onWebFormChange,
+  onPickFiles,
   onPickFolder,
   onRemoveLocalPath,
   onRegisterLocal,
@@ -101,6 +105,7 @@ export function CapturePage({
   onSelectSource,
 }: CapturePageProps) {
   const isLocal = mode === 'local'
+  const isPickingLocalPath = isPickingFolder || isPickingFiles
   const stage = describeJobStage(latestJob, selectedSource)
   const lastLogLine = latestLogLine(activeLogs)
 
@@ -141,9 +146,14 @@ export function CapturePage({
                   placeholder="E:\Projects\my-docs"
                   value={localForm.paths.join('\n')}
                 />
-                <button className={styles.secondaryButton} disabled={isPickingFolder} onClick={onPickFolder} type="button">
-                  {isPickingFolder ? 'Opening' : 'Browse'}
-                </button>
+                <div className={styles.pathActions}>
+                  <button className={styles.secondaryButton} disabled={isPickingLocalPath} onClick={onPickFolder} type="button">
+                    {isPickingFolder ? 'Opening' : 'Add folder'}
+                  </button>
+                  <button className={styles.secondaryButton} disabled={isPickingLocalPath} onClick={onPickFiles} type="button">
+                    {isPickingFiles ? 'Opening' : 'Add files'}
+                  </button>
+                </div>
               </div>
               {localForm.paths.filter(Boolean).length ? (
                 <div className={styles.selectedPathList}>

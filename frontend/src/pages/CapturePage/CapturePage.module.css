@@ -221,6 +221,12 @@
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
+.pathActions {
+  align-content: start;
+  display: grid;
+  gap: var(--space-3);
+}
+
 .formActions {
   align-items: center;
   display: flex;
@@ -558,6 +564,10 @@
 
   .pathField {
     grid-template-columns: 1fr;
+  }
+
+  .pathActions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .formActions {
