@@ -1,4 +1,4 @@
-import type { FormSubmitHandler, IndexJob, Message, SourceMode, SourceRecord, ViewName } from '../../types'
+import type { CrawlScope, FormSubmitHandler, IndexJob, Message, ScrapeMode, SourceMode, SourceRecord, ViewName } from '../../types'
 import { SourceIdentityFields } from '../../components/forms/SourceIdentityFields/SourceIdentityFields'
 import { ModeTabs } from '../../components/source/ModeTabs/ModeTabs'
 import { Badge } from '../../components/ui/Badge/Badge'
@@ -16,6 +16,18 @@ type LocalForm = SourceForm & {
 
 type WebForm = SourceForm & {
   url: string
+  maxPages: number
+  maxDepth: number
+  maxConcurrency: number
+  includePatterns: string
+  excludePatterns: string
+  scope: CrawlScope
+  scrapeMode: ScrapeMode
+  headers: string
+  preserveHashes: boolean
+  followRedirects: boolean
+  ignoreErrors: boolean
+  clean: boolean
 }
 
 type CapturePageProps = {
@@ -152,6 +164,136 @@ export function CapturePage({
               onNameChange={(name) => onWebFormChange({ ...webForm, name })}
               onVersionChange={(version) => onWebFormChange({ ...webForm, version })}
             />
+            <details className={styles.advancedOptions}>
+              <summary>Advanced crawl options</summary>
+              <div className={styles.optionGrid}>
+                <div className={styles.field}>
+                  <label htmlFor="web-max-pages">Max pages</label>
+                  <input
+                    id="web-max-pages"
+                    max="1000"
+                    min="1"
+                    onChange={(event) => onWebFormChange({ ...webForm, maxPages: Number(event.target.value) })}
+                    required
+                    type="number"
+                    value={webForm.maxPages}
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label htmlFor="web-max-depth">Max depth</label>
+                  <input
+                    id="web-max-depth"
+                    max="10"
+                    min="0"
+                    onChange={(event) => onWebFormChange({ ...webForm, maxDepth: Number(event.target.value) })}
+                    required
+                    type="number"
+                    value={webForm.maxDepth}
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label htmlFor="web-max-concurrency">Concurrency</label>
+                  <input
+                    id="web-max-concurrency"
+                    max="32"
+                    min="1"
+                    onChange={(event) => onWebFormChange({ ...webForm, maxConcurrency: Number(event.target.value) })}
+                    required
+                    type="number"
+                    value={webForm.maxConcurrency}
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label htmlFor="web-scope">Scope</label>
+                  <select
+                    id="web-scope"
+                    onChange={(event) =>
+                      onWebFormChange({ ...webForm, scope: event.target.value as WebForm['scope'] })
+                    }
+                    value={webForm.scope}
+                  >
+                    <option value="subpages">Subpages</option>
+                    <option value="hostname">Hostname</option>
+                    <option value="domain">Domain</option>
+                  </select>
+                </div>
+                <div className={styles.field}>
+                  <label htmlFor="web-scrape-mode">Scrape mode</label>
+                  <select
+                    id="web-scrape-mode"
+                    onChange={(event) =>
+                      onWebFormChange({ ...webForm, scrapeMode: event.target.value as WebForm['scrapeMode'] })
+                    }
+                    value={webForm.scrapeMode}
+                  >
+                    <option value="auto">Auto</option>
+                    <option value="fetch">Fetch</option>
+                    <option value="playwright">Playwright</option>
+                  </select>
+                </div>
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="web-include-patterns">Include patterns</label>
+                <textarea
+                  id="web-include-patterns"
+                  onChange={(event) => onWebFormChange({ ...webForm, includePatterns: event.target.value })}
+                  placeholder="docs/*&#10;/^https:\/\/docs.example.com\/api\//"
+                  value={webForm.includePatterns}
+                />
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="web-exclude-patterns">Exclude patterns</label>
+                <textarea
+                  id="web-exclude-patterns"
+                  onChange={(event) => onWebFormChange({ ...webForm, excludePatterns: event.target.value })}
+                  placeholder="**/CHANGELOG.md&#10;**/LICENSE"
+                  value={webForm.excludePatterns}
+                />
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="web-headers">Custom HTTP headers</label>
+                <textarea
+                  id="web-headers"
+                  onChange={(event) => onWebFormChange({ ...webForm, headers: event.target.value })}
+                  placeholder="Authorization: Bearer token&#10;X-Docs-Version: latest"
+                  value={webForm.headers}
+                />
+              </div>
+              <div className={styles.checkboxGrid}>
+                <label>
+                  <input
+                    checked={webForm.preserveHashes}
+                    onChange={(event) => onWebFormChange({ ...webForm, preserveHashes: event.target.checked })}
+                    type="checkbox"
+                  />
+                  Preserve hash routes
+                </label>
+                <label>
+                  <input
+                    checked={webForm.followRedirects}
+                    onChange={(event) => onWebFormChange({ ...webForm, followRedirects: event.target.checked })}
+                    type="checkbox"
+                  />
+                  Follow redirects
+                </label>
+                <label>
+                  <input
+                    checked={webForm.ignoreErrors}
+                    onChange={(event) => onWebFormChange({ ...webForm, ignoreErrors: event.target.checked })}
+                    type="checkbox"
+                  />
+                  Ignore scrape errors
+                </label>
+                <label>
+                  <input
+                    checked={webForm.clean}
+                    onChange={(event) => onWebFormChange({ ...webForm, clean: event.target.checked })}
+                    type="checkbox"
+                  />
+                  Clean before indexing
+                </label>
+              </div>
+            </details>
             <div className={styles.formActions}>
               <span className={styles.hint}>Crawls the URL, stores cleaned docs, then indexes them.</span>
               <button className={styles.primaryButton} disabled={isSubmitting} type="submit">

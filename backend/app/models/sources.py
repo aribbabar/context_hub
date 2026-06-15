@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
+from typing import Literal
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, HttpUrl
@@ -29,8 +30,9 @@ class LocalFolderSourceRequest(BaseModel):
     max_concurrency: int = Field(default=4, ge=1, le=32)
     include_patterns: list[str] = Field(default_factory=list)
     exclude_patterns: list[str] = Field(default_factory=list)
-    scope: str = "subpages"
-    scrape_mode: str = "auto"
+    scope: Literal["subpages", "hostname", "domain"] = "subpages"
+    scrape_mode: Literal["auto", "fetch", "playwright"] = "auto"
+    headers: dict[str, str] = Field(default_factory=dict)
     preserve_hashes: bool = False
     follow_redirects: bool = True
     ignore_errors: bool = True
@@ -46,8 +48,9 @@ class WebSourceRequest(BaseModel):
     max_concurrency: int = Field(default=4, ge=1, le=32)
     include_patterns: list[str] = Field(default_factory=list)
     exclude_patterns: list[str] = Field(default_factory=list)
-    scope: str = "subpages"
-    scrape_mode: str = "auto"
+    scope: Literal["subpages", "hostname", "domain"] = "subpages"
+    scrape_mode: Literal["auto", "fetch", "playwright"] = "auto"
+    headers: dict[str, str] = Field(default_factory=dict)
     preserve_hashes: bool = False
     follow_redirects: bool = True
     ignore_errors: bool = True
@@ -62,7 +65,7 @@ class SourceRecord(BaseModel):
     origin_location: str
     working_path: str | None = None
     docs_mcp_url: str | None = None
-    metadata: dict[str, str | int | bool | list[str]] = Field(default_factory=dict)
+    metadata: dict[str, str | int | bool | list[str] | dict[str, str]] = Field(default_factory=dict)
     status: SourceStatus = SourceStatus.REGISTERED
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 

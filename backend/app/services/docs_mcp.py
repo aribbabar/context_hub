@@ -59,6 +59,10 @@ class DocsMcpAdapter:
             command.extend(["--include-pattern", str(pattern)])
         for pattern in source.metadata.get("exclude_patterns", []) or []:
             command.extend(["--exclude-pattern", str(pattern)])
+        headers = source.metadata.get("headers", {})
+        if isinstance(headers, dict):
+            for name, value in headers.items():
+                command.extend(["--header", f"{name}:{value}"])
 
         if source.metadata.get("preserve_hashes", False):
             command.append("--preserve-hashes")

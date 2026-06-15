@@ -54,6 +54,7 @@
 }
 
 .field input,
+.field select,
 .field textarea {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -65,7 +66,8 @@
   width: 100%;
 }
 
-.field input {
+.field input,
+.field select {
   height: 52px;
   padding: 0 14px;
 }
@@ -77,9 +79,53 @@
 }
 
 .field input:focus,
+.field select:focus,
 .field textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.advancedOptions {
+  background: color-mix(in oklch, var(--bg) 72%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 18px;
+  padding: 14px 16px 4px;
+}
+
+.advancedOptions summary {
+  color: var(--fg);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.optionGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.checkboxGrid {
+  display: grid;
+  gap: 10px 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 4px 0 16px;
+}
+
+.checkboxGrid label {
+  align-items: center;
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 14px;
+  gap: 8px;
+}
+
+.checkboxGrid input {
+  accent-color: var(--accent);
+  height: 16px;
+  width: 16px;
 }
 
 .pathField {
@@ -424,6 +470,11 @@
   .formActions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .optionGrid,
+  .checkboxGrid {
+    grid-template-columns: 1fr;
   }
 
   .sourceItem {

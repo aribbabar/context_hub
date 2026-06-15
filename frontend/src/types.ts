@@ -5,6 +5,8 @@ export type SourceStatus = 'registered' | 'queued' | 'indexing' | 'indexed' | 'f
 export type JobStatus = 'queued' | 'running' | 'succeeded' | 'failed'
 export type EmbeddingMode = 'disabled' | 'ollama'
 export type SourceMode = 'local' | 'web'
+export type CrawlScope = 'subpages' | 'hostname' | 'domain'
+export type ScrapeMode = 'auto' | 'fetch' | 'playwright'
 export type ViewName = 'capture' | 'sources' | 'settings'
 export type Message = { text: string; tone?: 'success' | 'error' } | null
 
@@ -110,8 +112,9 @@ export type ParameterPayload = {
   max_concurrency: number
   include_patterns: string[]
   exclude_patterns: string[]
-  scope: 'subpages' | 'hostname' | 'domain'
-  scrape_mode: 'auto' | 'fetch' | 'playwright'
+  scope: CrawlScope
+  scrape_mode: ScrapeMode
+  headers: Record<string, string>
   preserve_hashes: boolean
   follow_redirects: boolean
   ignore_errors: boolean

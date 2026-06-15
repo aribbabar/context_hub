@@ -12,12 +12,14 @@ import type {
   DocsMcpDefaultsInstallResult,
   EmbeddingSettings,
   IndexJob,
+  CrawlScope,
   LocalPathEntry,
   LocalPathListResponse,
   LocalPathRootsResponse,
   Message,
   OllamaStatus,
   ParameterPayload,
+  ScrapeMode,
   SearchResponse,
   SettingsResponse,
   SourceDeletionResponse,
@@ -43,10 +45,40 @@ const initialLocalForm = {
   version: 'latest',
 }
 
-const initialWebForm = {
+type WebFormState = {
+  url: string
+  name: string
+  version: string
+  maxPages: number
+  maxDepth: number
+  maxConcurrency: number
+  includePatterns: string
+  excludePatterns: string
+  scope: CrawlScope
+  scrapeMode: ScrapeMode
+  headers: string
+  preserveHashes: boolean
+  followRedirects: boolean
+  ignoreErrors: boolean
+  clean: boolean
+}
+
+const initialWebForm: WebFormState = {
   url: '',
   name: '',
   version: 'latest',
+  maxPages: 100,
+  maxDepth: 2,
+  maxConcurrency: 4,
+  includePatterns: '',
+  excludePatterns: '',
+  scope: 'subpages' as const,
+  scrapeMode: 'auto' as const,
+  headers: '',
+  preserveHashes: false,
+  followRedirects: true,
+  ignoreErrors: true,
+  clean: true,
 }
 
 function App() {
@@ -270,7 +302,7 @@ function App() {
           url: webForm.url,
           name: webForm.name || null,
           version: webForm.version,
-          ...defaultPayload(2),
+          ...webParameterPayload(webForm),
         }),
       })
 
@@ -650,10 +682,28 @@ function defaultPayload(depth: number): ParameterPayload {
     exclude_patterns: [],
     scope: 'subpages',
     scrape_mode: 'auto',
+    headers: {},
     preserve_hashes: false,
     follow_redirects: true,
     ignore_errors: true,
     clean: true,
+  }
+}
+
+function webParameterPayload(form: WebFormState): ParameterPayload {
+  return {
+    max_pages: form.maxPages,
+    max_depth: form.maxDepth,
+    max_concurrency: form.maxConcurrency,
+    include_patterns: parseLines(form.includePatterns),
+    exclude_patterns: parseLines(form.excludePatterns),
+    scope: form.scope,
+    scrape_mode: form.scrapeMode,
+    headers: parseHeaders(form.headers),
+    preserve_hashes: form.preserveHashes,
+    follow_redirects: form.followRedirects,
+    ignore_errors: form.ignoreErrors,
+    clean: form.clean,
   }
 }
 
@@ -673,6 +723,28 @@ async function readErrorMessage(response: Response) {
 
 function normalizePathList(paths: string[]) {
   return Array.from(new Set(paths.map((path) => path.trim()).filter(Boolean)))
+}
+
+function parseLines(value: string) {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+}
+
+function parseHeaders(value: string) {
+  return Object.fromEntries(
+    parseLines(value)
+      .map((line) => {
+        const separatorIndex = line.indexOf(':')
+        if (separatorIndex === -1) return null
+
+        const name = line.slice(0, separatorIndex).trim()
+        const headerValue = line.slice(separatorIndex + 1).trim()
+        return name && headerValue ? [name, headerValue] : null
+      })
+      .filter((entry): entry is [string, string] => entry !== null),
+  )
 }
 
 export default App

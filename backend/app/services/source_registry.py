@@ -130,7 +130,7 @@ class SourceRegistry:
     def _scrape_metadata(
         self,
         request: LocalFolderSourceRequest | WebSourceRequest,
-    ) -> dict[str, str | int | bool | list[str]]:
+    ) -> dict[str, str | int | bool | list[str] | dict[str, str]]:
         metadata = {
             "max_pages": request.max_pages,
             "max_depth": request.max_depth,
@@ -139,6 +139,7 @@ class SourceRegistry:
             "exclude_patterns": request.exclude_patterns,
             "scope": request.scope,
             "scrape_mode": request.scrape_mode,
+            "headers": request.headers,
             "preserve_hashes": request.preserve_hashes,
             "follow_redirects": request.follow_redirects,
             "ignore_errors": request.ignore_errors,
