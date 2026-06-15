@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { AppHeader } from './components/layout/AppHeader/AppHeader'
 import { ConfirmationModal } from './components/ui/ConfirmationModal/ConfirmationModal'
+import { LocalPathPickerModal } from './components/ui/LocalPathPickerModal/LocalPathPickerModal'
 import { CapturePage } from './pages/CapturePage/CapturePage'
 import { SettingsPage } from './pages/SettingsPage/SettingsPage'
 import { SourcesPage } from './pages/SourcesPage/SourcesPage'
@@ -10,6 +11,9 @@ import type {
   DocsMcpDefaultsInstallResult,
   EmbeddingSettings,
   IndexJob,
+  LocalPathEntry,
+  LocalPathListResponse,
+  LocalPathRootsResponse,
   Message,
   OllamaStatus,
   ParameterPayload,
@@ -32,7 +36,7 @@ const defaultEmbeddingSettings: EmbeddingSettings = {
 }
 
 const initialLocalForm = {
-  path: '',
+  paths: [] as string[],
   name: '',
   version: 'latest',
 }
@@ -56,6 +60,12 @@ function App() {
   const [ollamaStatus, setOllamaStatus] = useState<OllamaStatus | null>(null)
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking')
   const [isPickingFolder, setIsPickingFolder] = useState(false)
+  const [isLocalPathPickerOpen, setIsLocalPathPickerOpen] = useState(false)
+  const [localPathEntries, setLocalPathEntries] = useState<LocalPathEntry[]>([])
+  const [localPathParent, setLocalPathParent] = useState<string | null>(null)
+  const [localPathRoots, setLocalPathRoots] = useState<LocalPathEntry[]>([])
+  const [localPathCurrent, setLocalPathCurrent] = useState('')
+  const [pickerSelectedPaths, setPickerSelectedPaths] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState<Message>(null)
   const [query, setQuery] = useState('')
@@ -189,6 +199,12 @@ function App() {
 
   async function registerLocalSource(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    const localPaths = normalizePathList(localForm.paths)
+    if (!localPaths.length) {
+      setMessage({ text: 'Select at least one local folder or file', tone: 'error' })
+      return
+    }
+
     setIsSubmitting(true)
     setMessage(null)
 
@@ -197,7 +213,7 @@ function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          path: localForm.path,
+          paths: localPaths,
           name: localForm.name || null,
           version: localForm.version,
           ...defaultPayload(10),
@@ -211,7 +227,8 @@ function App() {
       const payload = (await response.json()) as SourceRegistrationResponse
       setLocalForm(initialLocalForm)
       setSelectedSourceId(payload.source.id)
-      setMessage({ text: `${payload.source.name} registered`, tone: 'success' })
+      setPickerSelectedPaths([])
+      setMessage({ text: `${payload.source.name} registered as one source`, tone: 'success' })
       await refreshSources()
     } catch (error) {
       setMessage({
@@ -264,23 +281,80 @@ function App() {
     setMessage(null)
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/folders/pick`, { method: 'POST' })
-      if (!response.ok) {
-        throw new Error('Folder picker unavailable')
-      }
-
-      const payload = (await response.json()) as { path: string | null }
-      if (payload.path) {
-        setLocalForm((current) => ({ ...current, path: payload.path ?? current.path }))
-      }
+      setPickerSelectedPaths(localForm.paths)
+      setIsLocalPathPickerOpen(true)
+      await Promise.all([refreshLocalPathRoots(), browseLocalPath()])
     } catch (error) {
       setMessage({
-        text: error instanceof Error ? error.message : 'Could not open folder picker',
+        text: error instanceof Error ? error.message : 'Could not open local path picker',
         tone: 'error',
       })
     } finally {
       setIsPickingFolder(false)
     }
+  }
+
+  async function refreshLocalPathRoots() {
+    const response = await fetch(`${API_BASE_URL}/api/folders/roots`)
+    if (!response.ok) {
+      throw new Error('Unable to load local roots')
+    }
+
+    const payload = (await response.json()) as LocalPathRootsResponse
+    setLocalPathRoots(payload.roots)
+  }
+
+  async function browseLocalPath(path?: string) {
+    const query = path ? `?path=${encodeURIComponent(path)}` : ''
+    const response = await fetch(`${API_BASE_URL}/api/folders/browse${query}`)
+    if (!response.ok) {
+      throw new Error(await readErrorMessage(response))
+    }
+
+    const payload = (await response.json()) as LocalPathListResponse
+    setLocalPathCurrent(payload.current_path)
+    setLocalPathParent(payload.parent_path)
+    setLocalPathEntries(payload.entries)
+  }
+
+  async function navigateLocalPath(path: string) {
+    setIsPickingFolder(true)
+    setMessage(null)
+
+    try {
+      await browseLocalPath(path)
+    } catch (error) {
+      setMessage({
+        text: error instanceof Error ? error.message : 'Could not open local path',
+        tone: 'error',
+      })
+    } finally {
+      setIsPickingFolder(false)
+    }
+  }
+
+  function togglePickerPath(path: string) {
+    setPickerSelectedPaths((current) =>
+      current.includes(path)
+        ? current.filter((selectedPath) => selectedPath !== path)
+        : [...current, path],
+    )
+  }
+
+  function applyPickerPaths() {
+    setLocalForm((current) => ({
+      ...current,
+      paths: normalizePathList([...current.paths, ...pickerSelectedPaths]),
+    }))
+    setIsLocalPathPickerOpen(false)
+  }
+
+  function removeLocalPath(path: string) {
+    setLocalForm((current) => ({
+      ...current,
+      paths: current.paths.filter((currentPath) => currentPath !== path),
+    }))
+    setPickerSelectedPaths((current) => current.filter((currentPath) => currentPath !== path))
   }
 
   async function startIndexing() {
@@ -457,6 +531,7 @@ function App() {
           onLocalFormChange={setLocalForm}
           onWebFormChange={setWebForm}
           onPickFolder={pickFolder}
+          onRemoveLocalPath={removeLocalPath}
           onRegisterLocal={registerLocalSource}
           onRegisterWeb={registerWebSource}
           onNavigate={setActiveView}
@@ -514,6 +589,20 @@ function App() {
         onCancel={cancelDeleteSource}
         onConfirm={confirmDeleteSource}
       />
+
+      <LocalPathPickerModal
+        currentPath={localPathCurrent}
+        entries={localPathEntries}
+        isLoading={isPickingFolder}
+        isOpen={isLocalPathPickerOpen}
+        parentPath={localPathParent}
+        roots={localPathRoots}
+        selectedPaths={pickerSelectedPaths}
+        onApply={applyPickerPaths}
+        onCancel={() => setIsLocalPathPickerOpen(false)}
+        onNavigate={(path) => void navigateLocalPath(path)}
+        onTogglePath={togglePickerPath}
+      />
     </div>
   )
 }
@@ -546,6 +635,10 @@ async function readErrorMessage(response: Response) {
   }
 
   return text
+}
+
+function normalizePathList(paths: string[]) {
+  return Array.from(new Set(paths.map((path) => path.trim()).filter(Boolean)))
 }
 
 export default App

@@ -53,20 +53,31 @@
   letter-spacing: 0;
 }
 
-.field input {
+.field input,
+.field textarea {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 10px;
   color: var(--fg);
   font: inherit;
   font-size: 16px;
-  height: 52px;
   outline: none;
-  padding: 0 14px;
   width: 100%;
 }
 
-.field input:focus {
+.field input {
+  height: 52px;
+  padding: 0 14px;
+}
+
+.field textarea {
+  min-height: 96px;
+  padding: 13px 14px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
@@ -83,6 +94,51 @@
   gap: 16px;
   justify-content: space-between;
   margin-top: 8px;
+}
+
+.selectedPathList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.selectedPath {
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  display: inline-flex;
+  gap: 8px;
+  max-width: 100%;
+  padding: 5px 8px 5px 10px;
+}
+
+.selectedPath span {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  max-width: min(520px, 70vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selectedPath button {
+  align-items: center;
+  appearance: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--fg);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  height: 22px;
+  justify-content: center;
+  padding: 0;
+  width: 22px;
 }
 
 .hint,

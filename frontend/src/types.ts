@@ -8,6 +8,22 @@ export type SourceMode = 'local' | 'web'
 export type ViewName = 'capture' | 'sources' | 'settings'
 export type Message = { text: string; tone?: 'success' | 'error' } | null
 
+export type LocalPathEntry = {
+  name: string
+  path: string
+  is_dir: boolean
+}
+
+export type LocalPathListResponse = {
+  current_path: string
+  parent_path: string | null
+  entries: LocalPathEntry[]
+}
+
+export type LocalPathRootsResponse = {
+  roots: LocalPathEntry[]
+}
+
 export type SourceRecord = {
   id: string
   kind: SourceKind

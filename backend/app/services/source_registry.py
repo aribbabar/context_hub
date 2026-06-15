@@ -19,22 +19,17 @@ class SourceRegistry:
         self.registry_path = self.settings.data_dir / "sources.json"
 
     def register_local_folder(self, request: LocalFolderSourceRequest) -> SourceRecord:
-        folder = normalize_local_path(request.path)
-        if not folder.exists() or not folder.is_dir():
-            raise FileNotFoundError(f"Folder does not exist: {folder}")
+        source_paths = self._local_source_paths(request)
 
         source_id = uuid4().hex
-        copy_path = self.settings.source_copies_dir / source_id / folder.name
-        if copy_path.exists():
-            shutil.rmtree(copy_path)
-        shutil.copytree(folder, copy_path, ignore=shutil.ignore_patterns(".git", "node_modules", ".venv"))
+        copy_path = self._copy_local_paths(source_id, source_paths)
 
         source = SourceRecord(
             id=source_id,
             kind=SourceKind.LOCAL_FOLDER,
-            name=request.name or folder.name,
+            name=request.name or (source_paths[0].name if len(source_paths) == 1 else "Local selection"),
             version=request.version,
-            origin_location=str(folder),
+            origin_location="; ".join(str(path) for path in source_paths),
             working_path=str(copy_path),
             docs_mcp_url=path_to_file_url(copy_path),
             metadata=self._scrape_metadata(request),
@@ -136,7 +131,7 @@ class SourceRegistry:
         self,
         request: LocalFolderSourceRequest | WebSourceRequest,
     ) -> dict[str, str | int | bool | list[str]]:
-        return {
+        metadata = {
             "max_pages": request.max_pages,
             "max_depth": request.max_depth,
             "max_concurrency": request.max_concurrency,
@@ -149,3 +144,62 @@ class SourceRegistry:
             "ignore_errors": request.ignore_errors,
             "clean": request.clean,
         }
+
+        if isinstance(request, LocalFolderSourceRequest):
+            metadata["source_count"] = len(self._local_source_paths(request))
+
+        return metadata
+
+    def _local_source_paths(self, request: LocalFolderSourceRequest) -> list[Path]:
+        requested_paths = request.paths or ([request.path] if request.path else [])
+        if not requested_paths:
+            raise FileNotFoundError("Select at least one local folder or file")
+
+        source_paths = [normalize_local_path(path) for path in requested_paths]
+        missing_paths = [path for path in source_paths if not path.exists()]
+        if missing_paths:
+            raise FileNotFoundError(f"Path does not exist: {missing_paths[0]}")
+
+        invalid_paths = [path for path in source_paths if not path.is_dir() and not path.is_file()]
+        if invalid_paths:
+            raise FileNotFoundError(f"Path is not a file or folder: {invalid_paths[0]}")
+
+        return source_paths
+
+    def _copy_local_paths(self, source_id: str, source_paths: list[Path]) -> Path:
+        if len(source_paths) == 1 and source_paths[0].is_dir():
+            copy_path = self.settings.source_copies_dir / source_id / source_paths[0].name
+            if copy_path.exists():
+                shutil.rmtree(copy_path)
+            shutil.copytree(source_paths[0], copy_path, ignore=shutil.ignore_patterns(".git", "node_modules", ".venv"))
+            return copy_path
+
+        copy_root = self.settings.source_copies_dir / source_id / "selection"
+        if copy_root.exists():
+            shutil.rmtree(copy_root)
+        copy_root.mkdir(parents=True, exist_ok=True)
+
+        used_names: set[str] = set()
+        for source_path in source_paths:
+            destination = copy_root / self._unique_copy_name(source_path.name, used_names)
+            if source_path.is_dir():
+                shutil.copytree(source_path, destination, ignore=shutil.ignore_patterns(".git", "node_modules", ".venv"))
+            else:
+                shutil.copy2(source_path, destination)
+
+        return copy_root
+
+    def _unique_copy_name(self, name: str, used_names: set[str]) -> str:
+        if name not in used_names:
+            used_names.add(name)
+            return name
+
+        stem = Path(name).stem
+        suffix = Path(name).suffix
+        counter = 2
+        while True:
+            candidate = f"{stem}-{counter}{suffix}"
+            if candidate not in used_names:
+                used_names.add(candidate)
+                return candidate
+            counter += 1

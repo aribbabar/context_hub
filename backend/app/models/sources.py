@@ -20,7 +20,8 @@ class SourceStatus(StrEnum):
 
 
 class LocalFolderSourceRequest(BaseModel):
-    path: Path
+    path: Path | None = None
+    paths: list[Path] = Field(default_factory=list)
     name: str | None = None
     version: str = "latest"
     max_pages: int = Field(default=100, ge=1, le=10000)

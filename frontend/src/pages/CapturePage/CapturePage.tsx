@@ -11,7 +11,7 @@ type SourceForm = {
 }
 
 type LocalForm = SourceForm & {
-  path: string
+  paths: string[]
 }
 
 type WebForm = SourceForm & {
@@ -30,6 +30,7 @@ type CapturePageProps = {
   onLocalFormChange: (form: LocalForm) => void
   onWebFormChange: (form: WebForm) => void
   onPickFolder: () => void
+  onRemoveLocalPath: (path: string) => void
   onRegisterLocal: FormSubmitHandler
   onRegisterWeb: FormSubmitHandler
   onNavigate: (view: ViewName) => void
@@ -48,6 +49,7 @@ export function CapturePage({
   onLocalFormChange,
   onWebFormChange,
   onPickFolder,
+  onRemoveLocalPath,
   onRegisterLocal,
   onRegisterWeb,
   onNavigate,
@@ -79,20 +81,35 @@ export function CapturePage({
         {isLocal ? (
           <form onSubmit={onRegisterLocal}>
             <div className={styles.field}>
-              <label htmlFor="local-path">Folder path</label>
+              <label htmlFor="local-paths">Local paths</label>
               <div className={styles.pathField}>
-                <input
-                  id="local-path"
-                  onChange={(event) => onLocalFormChange({ ...localForm, path: event.target.value })}
+                <textarea
+                  id="local-paths"
+                  onChange={(event) =>
+                    onLocalFormChange({
+                      ...localForm,
+                      paths: event.target.value.split(/\r?\n/),
+                    })
+                  }
                   placeholder="E:\Projects\my-docs"
-                  required
-                  type="text"
-                  value={localForm.path}
+                  value={localForm.paths.join('\n')}
                 />
                 <button className={styles.secondaryButton} disabled={isPickingFolder} onClick={onPickFolder} type="button">
                   {isPickingFolder ? 'Opening' : 'Browse'}
                 </button>
               </div>
+              {localForm.paths.filter(Boolean).length ? (
+                <div className={styles.selectedPathList}>
+                  {localForm.paths.filter(Boolean).map((path) => (
+                    <span className={styles.selectedPath} key={path}>
+                      <span title={path}>{path}</span>
+                      <button onClick={() => onRemoveLocalPath(path)} type="button" aria-label={`Remove ${path}`}>
+                        x
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : null}
             </div>
             <SourceIdentityFields
               name={localForm.name}
@@ -101,7 +118,7 @@ export function CapturePage({
               onVersionChange={(version) => onLocalFormChange({ ...localForm, version })}
             />
             <div className={styles.formActions}>
-              <span className={styles.hint}>Registers a folder and copies it into the backend workspace.</span>
+              <span className={styles.hint}>Registers selected folders and files as one backend source.</span>
               <button className={styles.primaryButton} disabled={isSubmitting} type="submit">
                 {isSubmitting ? 'Copying' : 'Copy and register'}
               </button>
