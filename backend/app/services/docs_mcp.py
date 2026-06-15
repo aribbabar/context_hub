@@ -1,4 +1,6 @@
 import json
+import sqlite3
+from contextlib import closing
 from pathlib import Path
 from shutil import which
 
@@ -122,6 +124,62 @@ class DocsMcpAdapter:
             command.extend(["--version", source.version])
 
         return command
+
+    def prune_empty_index_metadata(self, source: SourceRecord) -> bool:
+        """Remove empty docs-mcp library/version rows left by the CLI remove command."""
+        db_path = self.settings.docs_mcp_store_dir / "documents.db"
+        if not db_path.exists():
+            return True
+
+        library = source.name.strip().lower()
+        version = (source.version or "").strip().lower()
+        if version == "latest":
+            version = ""
+
+        with closing(sqlite3.connect(db_path)) as connection:
+            connection.row_factory = sqlite3.Row
+            required_tables = {"libraries", "versions", "pages", "documents"}
+            tables = {
+                row["name"]
+                for row in connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type = 'table'"
+                )
+            }
+            if not required_tables.issubset(tables):
+                return False
+
+            row = connection.execute(
+                """
+                SELECT
+                    v.id AS version_id,
+                    v.library_id AS library_id,
+                    COUNT(DISTINCT p.id) AS page_count,
+                    COUNT(d.id) AS document_count
+                FROM versions v
+                JOIN libraries l ON v.library_id = l.id
+                LEFT JOIN pages p ON p.version_id = v.id
+                LEFT JOIN documents d ON d.page_id = p.id
+                WHERE l.name = ? AND COALESCE(v.name, '') = ?
+                GROUP BY v.id, v.library_id
+                """,
+                (library, version),
+            ).fetchone()
+
+            if row is None:
+                return True
+            if row["page_count"] > 0 or row["document_count"] > 0:
+                return False
+
+            connection.execute("DELETE FROM versions WHERE id = ?", (row["version_id"],))
+            remaining_versions = connection.execute(
+                "SELECT COUNT(*) FROM versions WHERE library_id = ?",
+                (row["library_id"],),
+            ).fetchone()[0]
+            if remaining_versions == 0:
+                connection.execute("DELETE FROM libraries WHERE id = ?", (row["library_id"],))
+            connection.commit()
+
+        return True
 
     def ensure_config(self) -> None:
         config = {

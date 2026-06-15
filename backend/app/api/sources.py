@@ -103,6 +103,13 @@ def _delete_source(source_id: str) -> SourceDeletionResponse:
         docs_mcp_stdout = completed.stdout
         docs_mcp_stderr = completed.stderr
         docs_mcp_removed = completed.returncode == 0
+        if docs_mcp_removed and not docs_mcp.prune_empty_index_metadata(source):
+            docs_mcp_removed = False
+            docs_mcp_stderr = (
+                f"{docs_mcp_stderr}\n"
+                "Docs MCP remove deleted indexed pages/chunks, but Context Hub could not "
+                "confirm safe cleanup of the empty library/version metadata."
+            ).strip()
 
     deleted_source = registry.delete_source(source_id)
     if deleted_source is None:
