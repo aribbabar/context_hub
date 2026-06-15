@@ -53,6 +53,13 @@ export type SourcesResponse = {
   jobs: IndexJob[]
 }
 
+export type SearchResponse = {
+  command: string[]
+  stdout: string
+  stderr: string
+  results: unknown
+}
+
 export type SourceDeletionResponse = {
   deleted_source: SourceRecord
   docs_mcp_command: string[] | null

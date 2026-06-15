@@ -200,6 +200,10 @@
   margin-top: 8px;
 }
 
+.progressPanel {
+  margin-bottom: 40px;
+}
+
 .sectionHeading {
   align-items: center;
   display: flex;
@@ -290,6 +294,124 @@
   text-align: center;
 }
 
+.progressContent {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 14px;
+  padding-top: 18px;
+}
+
+.progressSummary {
+  align-items: end;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.progressSummary div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.progressSummary strong {
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.progressSummary span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.progressSummary > span {
+  color: var(--fg);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.progressBar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.progressBar span {
+  background: var(--accent);
+  display: block;
+  height: 100%;
+  transition: width 300ms ease;
+}
+
+.stageList {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+}
+
+.stageList li {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  font-size: 13px;
+  gap: 8px;
+  min-width: 0;
+}
+
+.stageList li span {
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  flex: 0 0 auto;
+  height: 10px;
+  width: 10px;
+}
+
+.stageList .done,
+.stageList .active {
+  color: var(--fg);
+}
+
+.stageList .done span {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.stageList .active span {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.jobDetail {
+  color: var(--muted);
+  display: grid;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  gap: 4px;
+}
+
+.jobDetail span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logLine {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  padding: 10px 12px;
+}
+
 @media (max-width: 720px) {
   .hero h1 {
     font-size: 34px;
@@ -306,6 +428,10 @@
 
   .sourceItem {
     align-items: start;
+    grid-template-columns: 1fr;
+  }
+
+  .stageList {
     grid-template-columns: 1fr;
   }
 }

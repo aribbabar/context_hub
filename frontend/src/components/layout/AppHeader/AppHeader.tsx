@@ -1,3 +1,4 @@
+import { NavLink } from 'react-router'
 import { classNames } from '../../../utils/classNames'
 import type { ViewName } from '../../../types'
 import styles from './AppHeader.module.css'
@@ -5,12 +6,11 @@ import styles from './AppHeader.module.css'
 type AppHeaderProps = {
   activeView: ViewName
   apiStatus: 'checking' | 'online' | 'offline'
-  onNavigate: (view: ViewName) => void
 }
 
 const navItems: ViewName[] = ['capture', 'sources', 'settings']
 
-export function AppHeader({ activeView, apiStatus, onNavigate }: AppHeaderProps) {
+export function AppHeader({ activeView, apiStatus }: AppHeaderProps) {
   return (
     <header
       className={classNames(
@@ -19,22 +19,21 @@ export function AppHeader({ activeView, apiStatus, onNavigate }: AppHeaderProps)
         activeView === 'settings' && styles.topbarSettings,
       )}
     >
-      <button className={styles.brand} type="button" onClick={() => onNavigate('capture')}>
+      <NavLink className={styles.brand} to="/capture">
         <span className={styles.brandMark}>CH</span>
         <span className={styles.brandName}>Context Hub</span>
-      </button>
+      </NavLink>
 
       <nav className={styles.topbarNav} aria-label="Primary">
         {navItems.map((view) => (
-          <button
+          <NavLink
             aria-current={activeView === view ? 'page' : undefined}
             className={activeView === view ? styles.current : undefined}
             key={view}
-            onClick={() => onNavigate(view)}
-            type="button"
+            to={`/${view}`}
           >
             {view === 'capture' ? 'Capture' : titleCase(view)}
-          </button>
+          </NavLink>
         ))}
       </nav>
 

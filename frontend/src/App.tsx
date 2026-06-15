@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router'
 import { AppHeader } from './components/layout/AppHeader/AppHeader'
 import { ConfirmationModal } from './components/ui/ConfirmationModal/ConfirmationModal'
 import { LocalPathPickerModal } from './components/ui/LocalPathPickerModal/LocalPathPickerModal'
@@ -17,6 +18,7 @@ import type {
   Message,
   OllamaStatus,
   ParameterPayload,
+  SearchResponse,
   SettingsResponse,
   SourceDeletionResponse,
   SourceMode,
@@ -48,7 +50,8 @@ const initialWebForm = {
 }
 
 function App() {
-  const [activeView, setActiveView] = useState<ViewName>('capture')
+  const location = useLocation()
+  const navigate = useNavigate()
   const [mode, setMode] = useState<SourceMode>('local')
   const [localForm, setLocalForm] = useState(initialLocalForm)
   const [webForm, setWebForm] = useState(initialWebForm)
@@ -70,7 +73,7 @@ function App() {
   const [message, setMessage] = useState<Message>(null)
   const [query, setQuery] = useState('')
   const [searchLimit, setSearchLimit] = useState(5)
-  const [searchOutput, setSearchOutput] = useState('')
+  const [searchOutput, setSearchOutput] = useState<SearchResponse | null>(null)
   const [isSearching, setIsSearching] = useState(false)
   const [deletingSourceId, setDeletingSourceId] = useState<string | null>(null)
   const [sourceIdPendingDeletion, setSourceIdPendingDeletion] = useState<string | null>(null)
@@ -106,6 +109,17 @@ function App() {
   const sourcePendingDeletion = useMemo(
     () => sources.find((source) => source.id === sourceIdPendingDeletion),
     [sourceIdPendingDeletion, sources],
+  )
+
+  const activeView = useMemo((): ViewName => {
+    if (location.pathname.startsWith('/sources')) return 'sources'
+    if (location.pathname.startsWith('/settings')) return 'settings'
+    return 'capture'
+  }, [location.pathname])
+
+  const indexedSources = useMemo(
+    () => sortedSources.filter((source) => source.status === 'indexed'),
+    [sortedSources],
   )
 
   const refreshSources = useCallback(async () => {
@@ -225,11 +239,14 @@ function App() {
       }
 
       const payload = (await response.json()) as SourceRegistrationResponse
+      const job = await startIndexJobForSource(payload.source.id)
       setLocalForm(initialLocalForm)
       setSelectedSourceId(payload.source.id)
       setPickerSelectedPaths([])
-      setMessage({ text: `${payload.source.name} registered as one source`, tone: 'success' })
+      setActiveLogs('')
+      setMessage({ text: `${payload.source.name} is indexing`, tone: 'success' })
       await refreshSources()
+      await refreshJob(job.id)
     } catch (error) {
       setMessage({
         text: error instanceof Error ? error.message : 'Local source registration failed',
@@ -262,10 +279,13 @@ function App() {
       }
 
       const payload = (await response.json()) as SourceRegistrationResponse
+      const job = await startIndexJobForSource(payload.source.id)
       setWebForm(initialWebForm)
       setSelectedSourceId(payload.source.id)
-      setMessage({ text: `${payload.source.name} registered`, tone: 'success' })
+      setActiveLogs('')
+      setMessage({ text: `${payload.source.name} is indexing`, tone: 'success' })
       await refreshSources()
+      await refreshJob(job.id)
     } catch (error) {
       setMessage({
         text: error instanceof Error ? error.message : 'Web source registration failed',
@@ -357,25 +377,17 @@ function App() {
     setPickerSelectedPaths((current) => current.filter((currentPath) => currentPath !== path))
   }
 
-  async function startIndexing() {
-    if (!selectedSource) return
-    setMessage(null)
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/sources/${selectedSource.id}/index`, {
-        method: 'POST',
-      })
-      if (!response.ok) {
-        throw new Error('Unable to start indexing')
-      }
-
-      const payload = (await response.json()) as { job: IndexJob }
-      setJobs((current) => [payload.job, ...current.filter((job) => job.id !== payload.job.id)])
-      setActiveLogs('')
-      await refreshJob(payload.job.id)
-    } catch (error) {
-      setActiveLogs(error instanceof Error ? error.message : 'Unable to start indexing')
+  async function startIndexJobForSource(sourceId: string) {
+    const response = await fetch(`${API_BASE_URL}/api/sources/${sourceId}/index`, {
+      method: 'POST',
+    })
+    if (!response.ok) {
+      throw new Error(await readErrorMessage(response))
     }
+
+    const payload = (await response.json()) as { job: IndexJob }
+    setJobs((current) => [payload.job, ...current.filter((job) => job.id !== payload.job.id)])
+    return payload.job
   }
 
   function requestDeleteSource(sourceId: string) {
@@ -415,7 +427,7 @@ function App() {
       setJobs((currentJobs) => currentJobs.filter((job) => job.source_id !== sourceId))
       setSelectedSourceId((current) => (current === sourceId ? '' : current))
       setActiveLogs('')
-      setSearchOutput('')
+      setSearchOutput(null)
       setSourceIdPendingDeletion(null)
       setMessage({ text: `${source.name} deleted${cleanupNote}`, tone: 'success' })
       await refreshSources()
@@ -431,27 +443,37 @@ function App() {
 
   async function searchDocs(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!selectedSource) return
+    const searchSource = indexedSources.find((source) => source.id === selectedSourceId) ?? indexedSources[0]
+    if (!searchSource) return
 
     setIsSearching(true)
-    setSearchOutput('')
+    setSearchOutput(null)
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/sources/search`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          source_id: selectedSource.id,
+          source_id: searchSource.id,
           query,
           limit: searchLimit,
           exact_match: false,
         }),
       })
 
-      const payload = await response.json()
-      setSearchOutput(
-        payload.results ? JSON.stringify(payload.results, null, 2) : payload.stdout || payload.stderr || 'No results.',
-      )
+      if (!response.ok) {
+        throw new Error(await readErrorMessage(response))
+      }
+
+      const payload = (await response.json()) as SearchResponse
+      setSearchOutput(payload)
+    } catch (error) {
+      setSearchOutput({
+        command: [],
+        stdout: '',
+        stderr: error instanceof Error ? error.message : 'Search failed',
+        results: null,
+      })
     } finally {
       setIsSearching(false)
     }
@@ -516,64 +538,76 @@ function App() {
 
   return (
     <div className={classNames(styles.appShell, activeView === 'settings' && styles.appShellSettings)}>
-      <AppHeader activeView={activeView} apiStatus={apiStatus} onNavigate={setActiveView} />
+      <AppHeader activeView={activeView} apiStatus={apiStatus} />
 
-      {activeView === 'capture' ? (
-        <CapturePage
-          mode={mode}
-          message={message}
-          recentSources={recentSources}
-          localForm={localForm}
-          webForm={webForm}
-          isPickingFolder={isPickingFolder}
-          isSubmitting={isSubmitting}
-          onModeChange={setMode}
-          onLocalFormChange={setLocalForm}
-          onWebFormChange={setWebForm}
-          onPickFolder={pickFolder}
-          onRemoveLocalPath={removeLocalPath}
-          onRegisterLocal={registerLocalSource}
-          onRegisterWeb={registerWebSource}
-          onNavigate={setActiveView}
-          onSelectSource={selectSource}
+      <Routes>
+        <Route index element={<Navigate replace to="/capture" />} />
+        <Route
+          path="/capture"
+          element={
+            <CapturePage
+              activeLogs={activeLogs}
+              latestJob={latestJob}
+              selectedSource={selectedSource}
+              mode={mode}
+              message={message}
+              recentSources={recentSources}
+              localForm={localForm}
+              webForm={webForm}
+              isPickingFolder={isPickingFolder}
+              isSubmitting={isSubmitting}
+              onModeChange={setMode}
+              onLocalFormChange={setLocalForm}
+              onWebFormChange={setWebForm}
+              onPickFolder={pickFolder}
+              onRemoveLocalPath={removeLocalPath}
+              onRegisterLocal={registerLocalSource}
+              onRegisterWeb={registerWebSource}
+              onNavigate={(view) => navigate(`/${view}`)}
+              onSelectSource={selectSource}
+            />
+          }
         />
-      ) : null}
-
-      {activeView === 'sources' ? (
-        <SourcesPage
-          activeLogs={activeLogs}
-          isSearching={isSearching}
-          latestJob={latestJob}
-          query={query}
-          searchLimit={searchLimit}
-          searchOutput={searchOutput}
-          selectedSource={selectedSource}
-          sources={sortedSources}
-          deletingSourceId={deletingSourceId}
-          message={message}
-          onDeleteSource={requestDeleteSource}
-          onQueryChange={setQuery}
-          onRefreshSources={refreshSources}
-          onSearchDocs={searchDocs}
-          onSearchLimitChange={setSearchLimit}
-          onSelectSource={selectSource}
-          onStartIndexing={startIndexing}
+        <Route
+          path="/sources"
+          element={
+            <SourcesPage
+              isSearching={isSearching}
+              query={query}
+              searchLimit={searchLimit}
+              searchOutput={searchOutput}
+              selectedSource={indexedSources.find((source) => source.id === selectedSourceId) ?? indexedSources[0]}
+              sources={indexedSources}
+              totalSourceCount={sources.length}
+              deletingSourceId={deletingSourceId}
+              message={message}
+              onDeleteSource={requestDeleteSource}
+              onQueryChange={setQuery}
+              onRefreshSources={refreshSources}
+              onSearchDocs={searchDocs}
+              onSearchLimitChange={setSearchLimit}
+              onSelectSource={selectSource}
+            />
+          }
         />
-      ) : null}
-
-      {activeView === 'settings' ? (
-        <SettingsPage
-          docsMcpDefaults={docsMcpDefaults}
-          embeddingSettings={embeddingSettings}
-          isInstallingDocsMcpDefaults={isInstallingDocsMcpDefaults}
-          isSavingSettings={isSavingSettings}
-          message={message}
-          ollamaStatus={ollamaStatus}
-          onInstallDocsMcpDefaults={installDocsMcpDefaults}
-          onSaveSettings={saveEmbeddingSettings}
-          onSettingsChange={setEmbeddingSettings}
+        <Route
+          path="/settings"
+          element={
+            <SettingsPage
+              docsMcpDefaults={docsMcpDefaults}
+              embeddingSettings={embeddingSettings}
+              isInstallingDocsMcpDefaults={isInstallingDocsMcpDefaults}
+              isSavingSettings={isSavingSettings}
+              message={message}
+              ollamaStatus={ollamaStatus}
+              onInstallDocsMcpDefaults={installDocsMcpDefaults}
+              onSaveSettings={saveEmbeddingSettings}
+              onSettingsChange={setEmbeddingSettings}
+            />
+          }
         />
-      ) : null}
+        <Route path="*" element={<Navigate replace to="/capture" />} />
+      </Routes>
 
       <ConfirmationModal
         confirmLabel="Delete source"

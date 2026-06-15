@@ -1,8 +1,7 @@
 .panel {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
   margin-bottom: 20px;
   padding: 22px;
 }
@@ -23,6 +22,12 @@
   text-transform: uppercase;
 }
 
+.panelHeader p {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 3px;
+}
+
 .primaryButton,
 .secondaryButton,
 .dangerButton {
@@ -32,7 +37,7 @@
   font: inherit;
   font-size: 13px;
   font-weight: 700;
-  height: 36px;
+  height: 40px;
   padding: 0 16px;
   transition: transform 80ms ease, opacity 120ms ease, background 120ms ease, border-color 120ms ease;
   white-space: nowrap;
@@ -77,133 +82,76 @@
   transform: none;
 }
 
-.tableWrap {
-  overflow-x: auto;
+.sourceList,
+.resultList {
+  display: grid;
+  gap: 10px;
 }
 
-.sourceTable {
-  border-collapse: collapse;
-  font-size: 14px;
-  min-width: 760px;
-  width: 100%;
+.sourceList > div {
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 8px 10px 8px 12px;
+  transition: border-color 120ms ease, background 120ms ease;
 }
 
-.sourceTable th,
-.sourceTable td {
-  border-bottom: 1px solid var(--border);
-  padding: 12px 10px;
+.sourceList > div:hover,
+.sourceList > div.selectedSource {
+  background: var(--surface);
+  border-color: var(--accent);
+}
+
+.sourceSelect {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  min-width: 0;
+  padding: 4px 0;
   text-align: left;
 }
 
-.sourceTable th {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.sourceIdentity {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
 }
 
-.sourceTable tbody tr {
-  cursor: pointer;
-  transition: background 80ms ease;
+.sourceIdentity strong {
+  font-size: 15px;
+  font-weight: 650;
 }
 
-.sourceTable tbody tr:hover {
-  background: var(--bg);
-}
-
-.sourceTable tbody tr.selected {
-  background: oklch(97% 0.02 190);
-}
-
-.locationCell {
+.sourceIdentity span {
   color: var(--muted);
   font-family: var(--font-mono);
   font-size: 12px;
-  max-width: 360px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.actionCell {
-  text-align: right;
-  width: 1%;
-}
-
-.detailGrid {
-  display: grid;
-  gap: 20px;
-  grid-template-columns: minmax(300px, 0.75fr) minmax(0, 1.25fr);
-}
-
-.detailList {
-  display: grid;
-  gap: 14px;
-  margin: 4px 0 18px;
-}
-
-.detailList div {
-  display: grid;
-  gap: 4px;
-}
-
-.detailList dt {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.detailList dd {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-
-.sourceActions {
+.sourceMeta {
+  align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-}
-
-.jobStatus {
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.progressBar {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  height: 10px;
-  margin-top: 10px;
-  overflow: hidden;
-}
-
-.progressBar span {
-  background: var(--accent);
-  display: block;
-  height: 100%;
-  transition: width 300ms ease;
-}
-
-.jobMeta {
-  color: var(--muted);
-  display: flex;
-  font-size: 13px;
-  gap: 16px;
-  margin-top: 14px;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .searchForm {
   align-items: end;
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(0, 1fr) 100px auto;
-  margin-bottom: 14px;
+  grid-template-columns: minmax(0, 1fr) 104px auto;
+  margin-bottom: 18px;
 }
 
 .field {
@@ -221,7 +169,7 @@
 .field input {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
   color: var(--fg);
   font: inherit;
   font-size: 15px;
@@ -236,33 +184,129 @@
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
-.codeBlock {
-  background: oklch(20% 0.015 250);
+.resultCard {
+  background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  color: #e5e7eb;
-  font: 13px/1.6 var(--font-mono);
-  margin: 0;
-  max-height: 360px;
-  min-height: 180px;
-  overflow: auto;
-  padding: 14px;
-  white-space: pre-wrap;
-  word-break: break-word;
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  padding: 16px;
 }
 
+.resultHeader {
+  align-items: start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.resultHeader h3 {
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.35;
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.resultIndex,
+.score {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.score {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  letter-spacing: 0;
+  padding: 4px 8px;
+  text-transform: none;
+}
+
+.resultSource {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.snippet {
+  color: var(--fg);
+  font-size: 14px;
+  line-height: 1.65;
+  max-width: 92ch;
+  white-space: pre-wrap;
+}
+
+.metadataList {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding-top: 12px;
+}
+
+.metadataList div {
+  display: grid;
+  gap: 4px;
+  grid-template-columns: 140px minmax(0, 1fr);
+}
+
+.metadataList dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.metadataList dd {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.plainOutput,
+.errorState,
 .emptyState {
   border: 1px dashed var(--border);
-  border-radius: 12px;
+  border-radius: 8px;
   color: var(--muted);
   font-size: 14px;
-  padding: 32px 16px;
+  padding: 24px 16px;
   text-align: center;
 }
 
-@media (max-width: 900px) {
-  .detailGrid,
+.plainOutput,
+.errorState {
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+  text-align: left;
+  white-space: pre-wrap;
+}
+
+.errorState {
+  border-color: oklch(78% 0.12 25);
+  color: var(--danger);
+}
+
+@media (max-width: 760px) {
+  .panelHeader,
+  .sourceList > div,
   .searchForm {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .sourceMeta {
+    justify-content: flex-start;
+  }
+
+  .metadataList div {
     grid-template-columns: 1fr;
   }
 }
