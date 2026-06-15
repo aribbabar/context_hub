@@ -75,9 +75,16 @@ def _markdown_pages(results: CrawlResult | list[CrawlResult]) -> list[MarkdownPa
     markdown_pages: list[MarkdownPage] = []
 
     for result in crawled_results:
+        success = bool(getattr(result, "success", True))
+        error_message = getattr(result, "error_message", None)
+        url = str(getattr(result, "url", "unknown URL"))
+        if not success:
+            detail = f": {error_message}" if error_message else ""
+            print(f"Skipped {url}: crawl failed{detail}")
+            continue
+
         markdown = getattr(result, "markdown", None)
         raw_markdown = getattr(markdown, "raw_markdown", None)
-        url = str(getattr(result, "url", "unknown URL"))
         if not raw_markdown:
             print(f"Skipped {url}: no markdown content")
             continue

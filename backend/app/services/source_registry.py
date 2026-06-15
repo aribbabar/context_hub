@@ -1,6 +1,7 @@
 import json
 import shutil
 from pathlib import Path
+from urllib.parse import urlparse, urlunparse
 from uuid import uuid4
 
 from app.core.config import get_settings
@@ -38,19 +39,28 @@ class SourceRegistry:
         return source
 
     def register_web_source(self, request: WebSourceRequest) -> SourceRecord:
-        source_id = uuid4().hex
+        sources = self._read()
+        source_name = request.name or request.url.host or str(request.url)
+        source_location = str(request.url)
+        existing_source = self._matching_web_source(sources, source_name, source_location)
+        source_id = existing_source.id if existing_source else uuid4().hex
         crawl_output_path = self.settings.indexed_docs_dir / source_id / "pages"
-        source = SourceRecord(
-            id=source_id,
-            kind=SourceKind.WEB,
-            name=request.name or request.url.host or str(request.url),
-            version=request.version,
-            origin_location=str(request.url),
-            working_path=str(crawl_output_path),
-            docs_mcp_url=path_to_file_url(crawl_output_path),
-            metadata=self._scrape_metadata(request),
-        )
-        self._upsert(source)
+        source_kwargs = {
+            "id": source_id,
+            "kind": SourceKind.WEB,
+            "name": source_name,
+            "version": request.version,
+            "origin_location": source_location,
+            "working_path": str(crawl_output_path),
+            "docs_mcp_url": path_to_file_url(crawl_output_path),
+            "metadata": self._scrape_metadata(request),
+        }
+        if existing_source:
+            source_kwargs["created_at"] = existing_source.created_at
+
+        source = SourceRecord(**source_kwargs)
+        sources[source.id] = source
+        self._write(sources)
         return source
 
     def list_sources(self) -> list[SourceRecord]:
@@ -97,6 +107,36 @@ class SourceRegistry:
         self.registry_path.parent.mkdir(parents=True, exist_ok=True)
         serialized = {source_id: source.model_dump(mode="json") for source_id, source in sources.items()}
         self.registry_path.write_text(json.dumps(serialized, indent=2), encoding="utf-8")
+
+    def _matching_web_source(
+        self,
+        sources: dict[str, SourceRecord],
+        name: str,
+        url: str,
+    ) -> SourceRecord | None:
+        normalized_url = self._normalized_url_key(url)
+        for source in sources.values():
+            if (
+                source.kind == SourceKind.WEB
+                and source.name == name
+                and self._normalized_url_key(source.origin_location) == normalized_url
+            ):
+                return source
+        return None
+
+    def _normalized_url_key(self, url: str) -> str:
+        parsed = urlparse(url)
+        path = parsed.path.rstrip("/") or "/"
+        return urlunparse(
+            (
+                parsed.scheme.lower(),
+                parsed.netloc.lower(),
+                path,
+                "",
+                parsed.query,
+                "",
+            )
+        )
 
     def _remove_generated_files(self, source: SourceRecord) -> None:
         candidates = [
