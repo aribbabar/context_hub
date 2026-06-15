@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import type {
   DocsMcpDefaultsInstallResult,
   EmbeddingMode,
@@ -35,6 +36,17 @@ export function SettingsPage({
 }: SettingsPageProps) {
   const isDisabled = embeddingSettings.mode === 'disabled'
   const canInstallDocsMcpDefaults = embeddingSettings.mode === 'ollama'
+  const [isModelSuggestionsOpen, setIsModelSuggestionsOpen] = useState(false)
+  const modelSuggestions = useMemo(() => {
+    const query = embeddingSettings.ollama_model.trim().toLowerCase()
+    const models = ollamaStatus?.models ?? []
+    if (!query) return models.slice(0, 8)
+
+    return models
+      .filter((model) => model.toLowerCase().includes(query))
+      .slice(0, 8)
+  }, [embeddingSettings.ollama_model, ollamaStatus?.models])
+  const showModelSuggestions = !isDisabled && isModelSuggestionsOpen
 
   return (
     <main>
@@ -78,24 +90,56 @@ export function SettingsPage({
 
           <div className={styles.field}>
             <label htmlFor="ollama-model">Ollama model</label>
-            <input
-              disabled={isDisabled}
-              id="ollama-model"
-              list="ollama-models"
-              onChange={(event) =>
-                onSettingsChange({
-                  ...embeddingSettings,
-                  ollama_model: event.target.value,
-                })
-              }
-              type="text"
-              value={embeddingSettings.ollama_model}
-            />
-            <datalist id="ollama-models">
-              {(ollamaStatus?.models ?? []).map((model) => (
-                <option key={model} value={model} />
-              ))}
-            </datalist>
+            <div className={styles.autocomplete}>
+              <input
+                aria-autocomplete="list"
+                aria-controls="ollama-model-suggestions"
+                aria-expanded={showModelSuggestions}
+                autoComplete="off"
+                disabled={isDisabled}
+                id="ollama-model"
+                onBlur={() => setIsModelSuggestionsOpen(false)}
+                onChange={(event) => {
+                  setIsModelSuggestionsOpen(true)
+                  onSettingsChange({
+                    ...embeddingSettings,
+                    ollama_model: event.target.value,
+                  })
+                }}
+                onFocus={() => setIsModelSuggestionsOpen(true)}
+                role="combobox"
+                type="text"
+                value={embeddingSettings.ollama_model}
+              />
+              {showModelSuggestions ? (
+                <div className={styles.suggestions} id="ollama-model-suggestions" role="listbox">
+                  {modelSuggestions.length ? (
+                    modelSuggestions.map((model) => (
+                      <button
+                        className={model === embeddingSettings.ollama_model ? styles.suggestionActive : undefined}
+                        key={model}
+                        onMouseDown={(event) => {
+                          event.preventDefault()
+                          onSettingsChange({
+                            ...embeddingSettings,
+                            ollama_model: model,
+                          })
+                          setIsModelSuggestionsOpen(false)
+                        }}
+                        role="option"
+                        type="button"
+                      >
+                        {model}
+                      </button>
+                    ))
+                  ) : (
+                    <span className={styles.suggestionEmpty}>
+                      {(ollamaStatus?.models.length ?? 0) > 0 ? 'No matching models' : 'No local models found'}
+                    </span>
+                  )}
+                </div>
+              ) : null}
+            </div>
           </div>
 
           <dl className={styles.statusGrid}>

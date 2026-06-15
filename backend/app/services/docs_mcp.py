@@ -16,7 +16,8 @@ class DocsMcpAdapter:
     def __init__(self) -> None:
         self.settings = get_settings()
         self.app_settings = AppSettingsStore()
-        self.npm_command = which("npm.cmd") or which("npm") or "npm"
+        self.node_command = which("node.exe") or which("node") or "node"
+        self.cli_entrypoint = self.settings.docs_mcp_dir / "dist" / "index.js"
         self.ensure_config()
 
     def build_local_scrape_command(self, source: SourceRecord) -> list[str]:
@@ -28,11 +29,9 @@ class DocsMcpAdapter:
 
     def build_scrape_command(self, source: SourceRecord, docs_url: str) -> list[str]:
         command = [
-            self.npm_command,
-            "--silent",
-            "run",
-            "cli",
-            "--",
+            self.node_command,
+            "--enable-source-maps",
+            str(self.cli_entrypoint),
             "scrape",
             source.name,
             docs_url,
@@ -83,11 +82,9 @@ class DocsMcpAdapter:
         exact_match: bool,
     ) -> list[str]:
         command = [
-            self.npm_command,
-            "--silent",
-            "run",
-            "cli",
-            "--",
+            self.node_command,
+            "--enable-source-maps",
+            str(self.cli_entrypoint),
             "search",
             source.name,
             query,
@@ -111,11 +108,9 @@ class DocsMcpAdapter:
 
     def build_remove_command(self, source: SourceRecord) -> list[str]:
         command = [
-            self.npm_command,
-            "--silent",
-            "run",
-            "cli",
-            "--",
+            self.node_command,
+            "--enable-source-maps",
+            str(self.cli_entrypoint),
             "remove",
             source.name,
             "--store-path",

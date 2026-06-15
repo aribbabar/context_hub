@@ -1,31 +1,31 @@
 .hero {
-  margin-bottom: 48px;
-  max-width: 720px;
+  margin-bottom: var(--space-14);
+  max-width: var(--settings-max-width);
 }
 
 .hero h1 {
   font-family: var(--font-display);
-  font-size: clamp(40px, 5.4vw, 64px);
+  font-size: var(--font-size-hero);
   font-weight: 650;
   letter-spacing: 0;
-  line-height: 1.05;
-  margin-bottom: 18px;
+  line-height: 1.06;
+  margin-bottom: var(--space-6);
 }
 
 .hero p {
   color: var(--muted);
-  font-size: 18px;
-  line-height: 1.55;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
   max-width: 56ch;
 }
 
 .captureCard {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.02);
-  margin-bottom: 40px;
-  padding: 28px;
+  margin-bottom: var(--space-14);
+  padding: var(--card-padding);
 }
 
 .visuallyHidden {
@@ -42,15 +42,21 @@
 
 .field {
   display: grid;
-  gap: 8px;
-  margin-bottom: 18px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-7);
 }
 
 .field label {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   letter-spacing: 0;
+}
+
+.labelRow {
+  align-items: center;
+  display: flex;
+  gap: var(--space-2);
 }
 
 .field input,
@@ -58,23 +64,195 @@
 .field textarea {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   color: var(--fg);
   font: inherit;
-  font-size: 16px;
+  font-size: var(--font-size-base);
   outline: none;
   width: 100%;
 }
 
 .field input,
 .field select {
-  height: 52px;
-  padding: 0 14px;
+  height: var(--control-height-lg);
+  padding: 0 var(--space-5);
+}
+
+.field select {
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  padding-right: var(--space-13);
+}
+
+.selectControl {
+  background:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%) calc(100% - 18px) 50% / 5px 5px no-repeat,
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%) calc(100% - 13px) 50% / 5px 5px no-repeat,
+    var(--bg);
+  border-radius: var(--radius-lg);
+  position: relative;
+}
+
+.selectControl:focus-within {
+  border-radius: var(--radius-lg);
+}
+
+.scopeSelect {
+  position: relative;
+}
+
+.scopeSelectButton {
+  align-items: center;
+  appearance: none;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--fg);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: var(--space-5);
+  min-height: var(--control-height-lg);
+  outline: none;
+  padding: var(--space-3) var(--space-5);
+  text-align: left;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  width: 100%;
+}
+
+.scopeSelectButton:hover {
+  background: var(--surface);
+  border-color: color-mix(in oklch, var(--muted) 55%, var(--border));
+}
+
+.scopeSelectButton:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 var(--focus-ring-size) var(--accent-soft);
+}
+
+.scopeSelectButton > span:first-child,
+.scopeOption > span:first-child {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.scopeSelectButton strong,
+.scopeOption strong {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+}
+
+.scopeSelectButton span span,
+.scopeOption span span {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.35;
+}
+
+.scopeChevron {
+  border-bottom: 1.5px solid var(--muted);
+  border-right: 1.5px solid var(--muted);
+  flex: 0 0 auto;
+  height: var(--space-3);
+  margin-left: auto;
+  transform: rotate(45deg) translateY(-1px);
+  width: var(--space-3);
+}
+
+.scopeMenu {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.14);
+  display: grid;
+  gap: var(--space-1);
+  left: 0;
+  padding: var(--space-2);
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-2));
+  z-index: 10;
+}
+
+.scopeOption {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--fg);
+  cursor: pointer;
+  display: flex;
+  gap: var(--space-4);
+  min-height: var(--control-height-md);
+  outline: none;
+  padding: var(--space-3) var(--space-4);
+  position: relative;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.scopeOption:hover,
+.scopeOption:focus-visible {
+  background: var(--bg);
+  border-color: var(--border);
+}
+
+.scopeOptionSelected {
+  background: var(--accent-soft);
+  border-color: color-mix(in oklch, var(--accent) 34%, var(--border));
+}
+
+.scopeOptionHelp {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+  display: inline-grid;
+  flex: 0 0 auto;
+  font-size: var(--font-size-2xs);
+  font-weight: 800;
+  height: var(--space-8);
+  line-height: 1;
+  margin-left: auto;
+  place-items: center;
+  position: relative;
+  width: var(--space-8);
+}
+
+.scopeOptionHelp span {
+  background: var(--fg);
+  border-radius: var(--radius-md);
+  bottom: calc(100% + var(--space-3));
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+  color: var(--surface);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  line-height: 1.45;
+  max-width: 260px;
+  opacity: 0;
+  padding: var(--space-3) var(--space-4);
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  text-align: left;
+  transform: translateY(var(--space-1));
+  transition: opacity 120ms ease, transform 120ms ease;
+  visibility: hidden;
+  width: max-content;
+  z-index: 11;
+}
+
+.scopeOptionHelp:hover span,
+.scopeOption:focus-visible .scopeOptionHelp span {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
 }
 
 .field textarea {
-  min-height: 96px;
-  padding: 13px 14px;
+  min-height: var(--textarea-min-height);
+  padding: var(--space-4) var(--space-5);
   resize: vertical;
 }
 
@@ -82,87 +260,167 @@
 .field select:focus,
 .field textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  box-shadow: 0 0 0 var(--focus-ring-size) var(--accent-soft);
 }
 
 .advancedOptions {
   background: color-mix(in oklch, var(--bg) 72%, var(--surface));
   border: 1px solid var(--border);
-  border-radius: 12px;
-  margin-bottom: 18px;
-  padding: 14px 16px 4px;
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-7);
+  padding: var(--space-5) var(--space-7) var(--space-1);
 }
 
 .advancedOptions summary {
   color: var(--fg);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-size-md);
   font-weight: 700;
-  margin-bottom: 14px;
+  margin-bottom: var(--space-5);
+}
+
+.advancedActions {
+  display: flex;
+  justify-content: flex-end;
+  margin: calc(var(--space-2) * -1) 0 var(--space-5);
+}
+
+.resetButton {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  height: var(--control-height-sm);
+  padding: 0 var(--space-5);
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+  white-space: nowrap;
+}
+
+.resetButton:hover {
+  background: var(--surface);
+  border-color: var(--muted);
+  color: var(--fg);
 }
 
 .optionGrid {
   display: grid;
-  gap: 16px;
+  gap: var(--space-7);
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .checkboxGrid {
   display: grid;
-  gap: 10px 16px;
+  gap: var(--space-4) var(--space-7);
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin: 4px 0 16px;
+  margin: var(--space-1) 0 var(--space-7);
 }
 
 .checkboxGrid label {
   align-items: center;
   color: var(--muted);
   display: inline-flex;
-  font-size: 14px;
-  gap: 8px;
+  font-size: var(--font-size-md);
+  gap: var(--space-3);
+}
+
+.checkboxGrid label span:not(.tooltip) {
+  min-width: 0;
 }
 
 .checkboxGrid input {
   accent-color: var(--accent);
-  height: 16px;
-  width: 16px;
+  height: var(--space-7);
+  width: var(--space-7);
+}
+
+.tooltip {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+  cursor: help;
+  display: inline-grid;
+  flex: 0 0 auto;
+  font-size: var(--font-size-2xs);
+  font-weight: 800;
+  height: var(--space-8);
+  line-height: 1;
+  place-items: center;
+  position: relative;
+  width: var(--space-8);
+}
+
+.tooltip span {
+  background: var(--fg);
+  border-radius: var(--radius-md);
+  bottom: calc(100% + var(--space-3));
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+  color: var(--surface);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  left: 50%;
+  line-height: 1.45;
+  max-width: 280px;
+  opacity: 0;
+  padding: var(--space-3) var(--space-4);
+  pointer-events: none;
+  position: absolute;
+  text-align: left;
+  transform: translate(-50%, var(--space-1));
+  transition: opacity 120ms ease, transform 120ms ease;
+  visibility: hidden;
+  width: max-content;
+  z-index: 3;
+}
+
+.tooltip:hover span,
+.tooltip:focus span {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  visibility: visible;
 }
 
 .pathField {
   display: grid;
-  gap: 10px;
+  gap: var(--space-4);
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .formActions {
   align-items: center;
   display: flex;
-  gap: 16px;
+  gap: var(--space-7);
   justify-content: space-between;
-  margin-top: 8px;
+  margin-top: var(--space-3);
 }
 
 .selectedPathList {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-3);
 }
 
 .selectedPath {
   align-items: center;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   display: inline-flex;
-  gap: 8px;
+  gap: var(--space-3);
   max-width: 100%;
-  padding: 5px 8px 5px 10px;
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-4);
 }
 
 .selectedPath span {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   max-width: min(520px, 70vw);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -174,33 +432,33 @@
   appearance: none;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: var(--fg);
   cursor: pointer;
   display: inline-flex;
   font: inherit;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 700;
-  height: 22px;
+  height: var(--space-9);
   justify-content: center;
   padding: 0;
-  width: 22px;
+  width: var(--space-9);
 }
 
 .hint,
 .linkButton {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 .primaryButton,
 .secondaryButton {
   appearance: none;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   font: inherit;
   font-weight: 700;
-  height: 52px;
+  height: var(--control-height-lg);
   transition: transform 80ms ease, opacity 120ms ease, background 120ms ease, border-color 120ms ease;
   white-space: nowrap;
 }
@@ -209,9 +467,9 @@
   background: var(--accent);
   border: 0;
   color: #fff;
-  font-size: 15px;
+  font-size: var(--font-size-md);
   letter-spacing: 0;
-  padding: 0 22px;
+  padding: 0 var(--space-8);
 }
 
 .primaryButton:hover {
@@ -226,8 +484,8 @@
   background: var(--bg);
   border: 1px solid var(--border);
   color: var(--fg);
-  font-size: 14px;
-  padding: 0 16px;
+  font-size: var(--font-size-sm);
+  padding: 0 var(--space-6);
 }
 
 .secondaryButton:hover {
@@ -243,24 +501,24 @@
 }
 
 .recentPanel {
-  margin-top: 8px;
+  margin-top: var(--space-3);
 }
 
 .progressPanel {
-  margin-bottom: 40px;
+  margin-bottom: var(--space-14);
 }
 
 .sectionHeading {
   align-items: center;
   display: flex;
-  gap: 16px;
+  gap: var(--space-7);
   justify-content: space-between;
-  margin-bottom: 18px;
+  margin-bottom: var(--space-7);
 }
 
 .sectionHeading h2 {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -270,11 +528,11 @@
   appearance: none;
   background: transparent;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font: inherit;
   font-weight: 500;
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-4);
   transition: background 120ms ease, color 120ms ease;
 }
 
@@ -285,7 +543,7 @@
 
 .sourceList {
   display: grid;
-  gap: 10px;
+  gap: var(--space-4);
 }
 
 .sourceItem {
@@ -293,14 +551,14 @@
   appearance: none;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   color: inherit;
   cursor: pointer;
   display: grid;
   font: inherit;
-  gap: 16px;
+  gap: var(--space-7);
   grid-template-columns: minmax(0, 1fr) auto auto;
-  padding: 14px 16px;
+  padding: var(--space-5) var(--space-7);
   text-align: left;
   transition: border-color 120ms ease, transform 80ms ease;
   width: 100%;
@@ -313,19 +571,19 @@
 
 .sourceMeta {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
 .sourceMeta strong {
-  font-size: 15px;
+  font-size: var(--font-size-md);
   font-weight: 600;
 }
 
 .sourceMeta span {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-size-xs);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -333,54 +591,54 @@
 
 .emptyState {
   border: 1px dashed var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   color: var(--muted);
-  font-size: 14px;
-  padding: 32px 16px;
+  font-size: var(--font-size-md);
+  padding: var(--space-12) var(--space-7);
   text-align: center;
 }
 
 .progressContent {
   border-top: 1px solid var(--border);
   display: grid;
-  gap: 14px;
-  padding-top: 18px;
+  gap: var(--space-6);
+  padding-top: var(--space-7);
 }
 
 .progressSummary {
   align-items: end;
   display: flex;
-  gap: 16px;
+  gap: var(--space-7);
   justify-content: space-between;
 }
 
 .progressSummary div {
   display: grid;
-  gap: 3px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
 .progressSummary strong {
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   font-weight: 650;
 }
 
 .progressSummary span {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
 }
 
 .progressSummary > span {
   color: var(--fg);
-  font-size: 22px;
+  font-size: var(--font-size-2xl);
   font-weight: 700;
 }
 
 .progressBar {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 999px;
-  height: 10px;
+  border-radius: var(--radius-pill);
+  height: var(--space-3);
   overflow: hidden;
 }
 
@@ -393,10 +651,10 @@
 
 .stageList {
   display: grid;
-  gap: 10px;
+  gap: var(--space-4);
   grid-template-columns: repeat(4, minmax(0, 1fr));
   list-style: none;
-  margin: 2px 0 0;
+  margin: var(--space-1) 0 0;
   padding: 0;
 }
 
@@ -404,8 +662,8 @@
   align-items: center;
   color: var(--muted);
   display: flex;
-  font-size: 13px;
-  gap: 8px;
+  font-size: var(--font-size-sm);
+  gap: var(--space-3);
   min-width: 0;
 }
 
@@ -413,8 +671,8 @@
   border: 1px solid var(--border);
   border-radius: 50%;
   flex: 0 0 auto;
-  height: 10px;
-  width: 10px;
+  height: var(--space-3);
+  width: var(--space-3);
 }
 
 .stageList .done,
@@ -430,15 +688,15 @@
 .stageList .active span {
   background: var(--accent);
   border-color: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-soft);
+  box-shadow: 0 0 0 var(--space-1) var(--accent-soft);
 }
 
 .jobDetail {
   color: var(--muted);
   display: grid;
   font-family: var(--font-mono);
-  font-size: 12px;
-  gap: 4px;
+  font-size: var(--font-size-xs);
+  gap: var(--space-1);
 }
 
 .jobDetail span {
@@ -450,17 +708,17 @@
 .logLine {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   overflow-wrap: anywhere;
-  padding: 10px 12px;
+  padding: var(--space-4) var(--space-5);
 }
 
 @media (max-width: 720px) {
   .hero h1 {
-    font-size: 34px;
+    font-size: var(--font-size-hero-mobile);
   }
 
   .pathField {

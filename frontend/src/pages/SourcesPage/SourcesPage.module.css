@@ -1,22 +1,22 @@
 .panel {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  margin-bottom: 20px;
-  padding: 22px;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-8);
+  padding: var(--panel-padding);
 }
 
 .panelHeader {
   align-items: center;
   display: flex;
-  gap: 16px;
+  gap: var(--space-7);
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-7);
 }
 
 .panelHeader h2 {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -24,21 +24,21 @@
 
 .panelHeader p {
   color: var(--muted);
-  font-size: 14px;
-  margin-top: 3px;
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-1);
 }
 
 .primaryButton,
 .secondaryButton,
 .dangerButton {
   appearance: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   font-weight: 700;
-  height: 40px;
-  padding: 0 16px;
+  height: var(--control-height-sm);
+  padding: 0 var(--space-6);
   transition: transform 80ms ease, opacity 120ms ease, background 120ms ease, border-color 120ms ease;
   white-space: nowrap;
 }
@@ -85,18 +85,18 @@
 .sourceList,
 .resultList {
   display: grid;
-  gap: 10px;
+  gap: var(--space-4);
 }
 
 .sourceList > div {
   align-items: center;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   display: grid;
-  gap: 16px;
+  gap: var(--space-7);
   grid-template-columns: minmax(0, 1fr) auto;
-  padding: 8px 10px 8px 12px;
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-5);
   transition: border-color 120ms ease, background 120ms ease;
 }
 
@@ -114,25 +114,25 @@
   cursor: pointer;
   font: inherit;
   min-width: 0;
-  padding: 4px 0;
+  padding: var(--space-1) 0;
   text-align: left;
 }
 
 .sourceIdentity {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
 }
 
 .sourceIdentity strong {
-  font-size: 15px;
+  font-size: var(--font-size-md);
   font-weight: 650;
 }
 
 .sourceIdentity span {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -142,26 +142,26 @@
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-3);
   justify-content: flex-end;
 }
 
 .searchForm {
   align-items: end;
   display: grid;
-  gap: 12px;
+  gap: var(--space-5);
   grid-template-columns: minmax(0, 1fr) 104px auto;
-  margin-bottom: 18px;
+  margin-bottom: var(--space-7);
 }
 
 .field {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .field label {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   letter-spacing: 0;
 }
@@ -169,49 +169,49 @@
 .field input {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--fg);
   font: inherit;
-  font-size: 15px;
-  height: 48px;
+  font-size: var(--font-size-md);
+  height: var(--control-height-md);
   outline: none;
-  padding: 0 12px;
+  padding: 0 var(--space-5);
   width: 100%;
 }
 
 .field input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  box-shadow: 0 0 0 var(--focus-ring-size) var(--accent-soft);
 }
 
 .resultCard {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   display: grid;
-  gap: 10px;
-  padding: 16px;
+  gap: var(--space-4);
+  padding: var(--space-6);
 }
 
 .resultHeader {
   align-items: start;
   display: flex;
-  gap: 16px;
+  gap: var(--space-7);
   justify-content: space-between;
 }
 
 .resultHeader h3 {
-  font-size: 16px;
+  font-size: var(--font-size-base);
   font-weight: 650;
   line-height: 1.35;
-  margin: 2px 0 0;
+  margin: var(--space-1) 0 0;
   overflow-wrap: anywhere;
 }
 
 .resultIndex,
 .score {
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -220,22 +220,22 @@
 .score {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   letter-spacing: 0;
-  padding: 4px 8px;
+  padding: var(--space-1) var(--space-3);
   text-transform: none;
 }
 
 .resultSource {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-xs);
   overflow-wrap: anywhere;
 }
 
 .snippet {
   color: var(--fg);
-  font-size: 14px;
+  font-size: var(--font-size-sm);
   line-height: 1.65;
   max-width: 92ch;
   white-space: pre-wrap;
@@ -244,20 +244,20 @@
 .metadataList {
   border-top: 1px solid var(--border);
   display: grid;
-  gap: 8px;
-  margin: 4px 0 0;
-  padding-top: 12px;
+  gap: var(--space-3);
+  margin: var(--space-1) 0 0;
+  padding-top: var(--space-5);
 }
 
 .metadataList div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   grid-template-columns: 140px minmax(0, 1fr);
 }
 
 .metadataList dt {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--font-size-2xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -265,7 +265,7 @@
 
 .metadataList dd {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   margin: 0;
   overflow-wrap: anywhere;
 }
@@ -274,10 +274,10 @@
 .errorState,
 .emptyState {
   border: 1px dashed var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--muted);
-  font-size: 14px;
-  padding: 24px 16px;
+  font-size: var(--font-size-md);
+  padding: var(--space-11) var(--space-7);
   text-align: center;
 }
 

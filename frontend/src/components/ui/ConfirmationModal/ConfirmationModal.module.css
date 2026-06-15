@@ -4,7 +4,7 @@
   display: flex;
   inset: 0;
   justify-content: center;
-  padding: 24px;
+  padding: var(--space-11);
   position: fixed;
   z-index: 20;
 }
@@ -12,35 +12,35 @@
 .dialog {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
   display: grid;
-  gap: 22px;
+  gap: var(--space-9);
   max-width: 440px;
-  padding: 22px;
+  padding: var(--space-9);
   width: min(100%, 440px);
 }
 
 .content {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .content h2 {
   color: var(--fg);
-  font-size: 20px;
+  font-size: var(--font-size-xl);
   font-weight: 750;
 }
 
 .content p {
   color: var(--muted);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-body);
 }
 
 .actions {
   display: flex;
-  gap: 10px;
+  gap: var(--space-4);
   justify-content: flex-end;
 }
 
@@ -48,13 +48,13 @@
 .secondaryButton,
 .dangerButton {
   appearance: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   font-weight: 700;
-  height: 38px;
-  padding: 0 16px;
+  height: var(--control-height-sm);
+  padding: 0 var(--space-6);
   transition: opacity 120ms ease, background 120ms ease, border-color 120ms ease;
   white-space: nowrap;
 }

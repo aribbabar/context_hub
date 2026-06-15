@@ -43,8 +43,8 @@ class WebSourceRequest(BaseModel):
     url: HttpUrl
     name: str | None = None
     version: str = "latest"
-    max_depth: int = Field(default=2, ge=0, le=10)
-    max_pages: int = Field(default=25, ge=1, le=1000)
+    max_depth: int = Field(default=3, ge=0, le=10)
+    max_pages: int = Field(default=1000, ge=1, le=1000)
     max_concurrency: int = Field(default=4, ge=1, le=32)
     include_patterns: list[str] = Field(default_factory=list)
     exclude_patterns: list[str] = Field(default_factory=list)

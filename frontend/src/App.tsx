@@ -45,10 +45,82 @@ const initialLocalForm = {
   version: 'latest',
 }
 
-type WebFormState = {
-  url: string
-  name: string
-  version: string
+const WEB_CRAWL_PREFERENCES_STORAGE_KEY = 'context-hub:web-crawl-preferences'
+const DEFAULT_WEB_INCLUDE_PATTERNS = '/docs/*'
+const DEFAULT_WEB_EXCLUDE_PATTERNS = [
+  '**/CHANGELOG.md',
+  '**/changelog.md',
+  '**/CHANGELOG.mdx',
+  '**/changelog.mdx',
+  '**/LICENSE',
+  '**/LICENSE.md',
+  '**/license.md',
+  '**/CODE_OF_CONDUCT.md',
+  '**/code_of_conduct.md',
+  '**/*.test.*',
+  '**/*.spec.*',
+  '**/*_test.py',
+  '**/*_test.go',
+  '**/*.lock',
+  '**/package-lock.json',
+  '**/yarn.lock',
+  '**/pnpm-lock.yaml',
+  '**/go.sum',
+  '**/*.min.js',
+  '**/*.min.css',
+  '**/*.map',
+  '**/*.d.ts',
+  '**/.DS_Store',
+  '**/Thumbs.db',
+  '**/*.swp',
+  '**/*.swo',
+  '/.*\\.(ini|cfg|conf|log|pid)$/',
+  '**/archive/**',
+  '**/archived/**',
+  '**/deprecated/**',
+  '**/legacy/**',
+  '**/old/**',
+  '**/outdated/**',
+  '**/previous/**',
+  '**/superseded/**',
+  'docs/old/**',
+  '**/test/**',
+  '**/tests/**',
+  '**/__tests__/**',
+  '**/spec/**',
+  '**/dist/**',
+  '**/build/**',
+  '**/out/**',
+  '**/target/**',
+  '**/.next/**',
+  '**/.nuxt/**',
+  '**/.vscode/**',
+  '**/.idea/**',
+  '**/i18n/ar*/**',
+  '**/i18n/de*/**',
+  '**/i18n/es*/**',
+  '**/i18n/fr*/**',
+  '**/i18n/hi*/**',
+  '**/i18n/it*/**',
+  '**/i18n/ja*/**',
+  '**/i18n/ko*/**',
+  '**/i18n/nl*/**',
+  '**/i18n/pl*/**',
+  '**/i18n/pt*/**',
+  '**/i18n/ru*/**',
+  '**/i18n/sv*/**',
+  '**/i18n/th*/**',
+  '**/i18n/tr*/**',
+  '**/i18n/vi*/**',
+  '**/i18n/zh*/**',
+  '**/zh-cn/**',
+  '**/zh-hk/**',
+  '**/zh-mo/**',
+  '**/zh-sg/**',
+  '**/zh-tw/**',
+].join('\n')
+
+type WebCrawlPreferences = {
   maxPages: number
   maxDepth: number
   maxConcurrency: number
@@ -56,29 +128,37 @@ type WebFormState = {
   excludePatterns: string
   scope: CrawlScope
   scrapeMode: ScrapeMode
-  headers: string
   preserveHashes: boolean
   followRedirects: boolean
   ignoreErrors: boolean
   clean: boolean
 }
 
-const initialWebForm: WebFormState = {
-  url: '',
-  name: '',
-  version: 'latest',
-  maxPages: 100,
-  maxDepth: 2,
+const defaultWebCrawlPreferences: WebCrawlPreferences = {
+  maxPages: 1000,
+  maxDepth: 3,
   maxConcurrency: 4,
-  includePatterns: '',
-  excludePatterns: '',
-  scope: 'subpages' as const,
-  scrapeMode: 'auto' as const,
-  headers: '',
+  includePatterns: DEFAULT_WEB_INCLUDE_PATTERNS,
+  excludePatterns: DEFAULT_WEB_EXCLUDE_PATTERNS,
+  scope: 'hostname',
+  scrapeMode: 'auto',
   preserveHashes: false,
   followRedirects: true,
   ignoreErrors: true,
   clean: true,
+}
+
+type WebFormState = {
+  url: string
+  name: string
+  version: string
+} & WebCrawlPreferences
+
+const initialWebForm: WebFormState = {
+  url: '',
+  name: '',
+  version: 'latest',
+  ...defaultWebCrawlPreferences,
 }
 
 function App() {
@@ -86,7 +166,10 @@ function App() {
   const navigate = useNavigate()
   const [mode, setMode] = useState<SourceMode>('local')
   const [localForm, setLocalForm] = useState(initialLocalForm)
-  const [webForm, setWebForm] = useState(initialWebForm)
+  const [webForm, setWebForm] = useState<WebFormState>(() => ({
+    ...initialWebForm,
+    ...readStoredWebCrawlPreferences(),
+  }))
   const [sources, setSources] = useState<SourceRecord[]>([])
   const [jobs, setJobs] = useState<IndexJob[]>([])
   const [selectedSourceId, setSelectedSourceId] = useState('')
@@ -230,6 +313,10 @@ function App() {
     return () => window.clearInterval(timer)
   }, [latestJob, refreshJob, refreshSources])
 
+  useEffect(() => {
+    writeStoredWebCrawlPreferences(webForm)
+  }, [webForm])
+
   function selectSource(sourceId: string) {
     setSelectedSourceId(sourceId)
     const job = jobs
@@ -312,7 +399,7 @@ function App() {
 
       const payload = (await response.json()) as SourceRegistrationResponse
       const job = await startIndexJobForSource(payload.source.id)
-      setWebForm(initialWebForm)
+      setWebForm((current) => ({ ...current, url: '', name: '', version: 'latest' }))
       setSelectedSourceId(payload.source.id)
       setActiveLogs('')
       setMessage({ text: `${payload.source.name} is indexing`, tone: 'success' })
@@ -407,6 +494,13 @@ function App() {
       paths: current.paths.filter((currentPath) => currentPath !== path),
     }))
     setPickerSelectedPaths((current) => current.filter((currentPath) => currentPath !== path))
+  }
+
+  function resetWebCrawlPreferences() {
+    setWebForm((current) => ({
+      ...current,
+      ...defaultWebCrawlPreferences,
+    }))
   }
 
   async function startIndexJobForSource(sourceId: string) {
@@ -595,6 +689,7 @@ function App() {
               onRemoveLocalPath={removeLocalPath}
               onRegisterLocal={registerLocalSource}
               onRegisterWeb={registerWebSource}
+              onResetWebPreferences={resetWebCrawlPreferences}
               onNavigate={(view) => navigate(`/${view}`)}
               onSelectSource={selectSource}
             />
@@ -699,7 +794,7 @@ function webParameterPayload(form: WebFormState): ParameterPayload {
     exclude_patterns: parseLines(form.excludePatterns),
     scope: form.scope,
     scrape_mode: form.scrapeMode,
-    headers: parseHeaders(form.headers),
+    headers: {},
     preserve_hashes: form.preserveHashes,
     follow_redirects: form.followRedirects,
     ignore_errors: form.ignoreErrors,
@@ -732,19 +827,67 @@ function parseLines(value: string) {
     .filter(Boolean)
 }
 
-function parseHeaders(value: string) {
-  return Object.fromEntries(
-    parseLines(value)
-      .map((line) => {
-        const separatorIndex = line.indexOf(':')
-        if (separatorIndex === -1) return null
+function readStoredWebCrawlPreferences(): Partial<WebCrawlPreferences> {
+  if (typeof window === 'undefined') return {}
 
-        const name = line.slice(0, separatorIndex).trim()
-        const headerValue = line.slice(separatorIndex + 1).trim()
-        return name && headerValue ? [name, headerValue] : null
-      })
-      .filter((entry): entry is [string, string] => entry !== null),
+  try {
+    const storedValue = window.localStorage.getItem(WEB_CRAWL_PREFERENCES_STORAGE_KEY)
+    if (!storedValue) return {}
+    return sanitizeWebCrawlPreferences(JSON.parse(storedValue))
+  } catch {
+    return {}
+  }
+}
+
+function writeStoredWebCrawlPreferences(form: WebCrawlPreferences) {
+  if (typeof window === 'undefined') return
+
+  window.localStorage.setItem(
+    WEB_CRAWL_PREFERENCES_STORAGE_KEY,
+    JSON.stringify({
+      maxPages: form.maxPages,
+      maxDepth: form.maxDepth,
+      maxConcurrency: form.maxConcurrency,
+      includePatterns: form.includePatterns,
+      excludePatterns: form.excludePatterns,
+      scope: form.scope,
+      scrapeMode: form.scrapeMode,
+      preserveHashes: form.preserveHashes,
+      followRedirects: form.followRedirects,
+      ignoreErrors: form.ignoreErrors,
+      clean: form.clean,
+    }),
   )
+}
+
+function sanitizeWebCrawlPreferences(value: unknown): Partial<WebCrawlPreferences> {
+  if (!value || typeof value !== 'object') return {}
+  const stored = value as Partial<WebCrawlPreferences>
+  const preferences: Partial<WebCrawlPreferences> = {}
+
+  if (typeof stored.maxPages === 'number') preferences.maxPages = clampNumber(stored.maxPages, 1, 1000)
+  if (typeof stored.maxDepth === 'number') preferences.maxDepth = clampNumber(stored.maxDepth, 0, 10)
+  if (typeof stored.maxConcurrency === 'number') {
+    preferences.maxConcurrency = clampNumber(stored.maxConcurrency, 1, 32)
+  }
+  if (typeof stored.includePatterns === 'string') preferences.includePatterns = stored.includePatterns
+  if (typeof stored.excludePatterns === 'string') preferences.excludePatterns = stored.excludePatterns
+  if (stored.scope === 'subpages' || stored.scope === 'hostname' || stored.scope === 'domain') {
+    preferences.scope = stored.scope
+  }
+  if (stored.scrapeMode === 'auto' || stored.scrapeMode === 'fetch' || stored.scrapeMode === 'playwright') {
+    preferences.scrapeMode = stored.scrapeMode
+  }
+  if (typeof stored.preserveHashes === 'boolean') preferences.preserveHashes = stored.preserveHashes
+  if (typeof stored.followRedirects === 'boolean') preferences.followRedirects = stored.followRedirects
+  if (typeof stored.ignoreErrors === 'boolean') preferences.ignoreErrors = stored.ignoreErrors
+  if (typeof stored.clean === 'boolean') preferences.clean = stored.clean
+
+  return preferences
+}
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(Math.max(Math.trunc(value), min), max)
 }
 
 export default App

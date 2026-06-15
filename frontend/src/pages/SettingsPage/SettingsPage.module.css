@@ -1,27 +1,27 @@
 .settingsCard {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.02);
-  margin-bottom: 20px;
-  padding: 28px;
+  margin-bottom: var(--space-8);
+  padding: var(--card-padding);
 }
 
 .settingsCard h2 {
-  font-size: 18px;
+  font-size: var(--font-size-lg);
   font-weight: 650;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-8);
 }
 
 .field {
   display: grid;
-  gap: 8px;
-  margin-bottom: 20px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-8);
 }
 
 .field label {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   letter-spacing: 0;
 }
@@ -30,20 +30,20 @@
 .field select {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   color: var(--fg);
   font: inherit;
-  font-size: 15px;
-  height: 48px;
+  font-size: var(--font-size-md);
+  height: var(--control-height-md);
   outline: none;
-  padding: 0 12px;
+  padding: 0 var(--space-5);
   width: 100%;
 }
 
 .field input:focus,
 .field select:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  box-shadow: 0 0 0 var(--focus-ring-size) var(--accent-soft);
 }
 
 .field input:disabled,
@@ -52,43 +52,96 @@
   opacity: 0.55;
 }
 
+.autocomplete {
+  position: relative;
+}
+
+.suggestions {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12);
+  display: grid;
+  gap: var(--space-1);
+  left: 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: var(--space-1);
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-2));
+  z-index: 5;
+}
+
+.suggestions button {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-md);
+  color: var(--fg);
+  cursor: pointer;
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  min-height: var(--control-height-sm);
+  overflow: hidden;
+  padding: 0 var(--space-4);
+  text-align: left;
+  text-overflow: ellipsis;
+  transition: background 120ms ease, color 120ms ease;
+  white-space: nowrap;
+}
+
+.suggestions button:hover,
+.suggestionActive {
+  background: var(--accent-soft);
+  color: var(--fg);
+}
+
+.suggestionEmpty {
+  color: var(--muted);
+  display: block;
+  font-size: var(--font-size-sm);
+  padding: var(--space-4);
+}
+
 .statusGrid {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   display: grid;
-  gap: 16px;
+  gap: var(--space-7);
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  margin: 8px 0 28px;
-  padding: 16px;
+  margin: var(--space-3) 0 var(--space-11);
+  padding: var(--space-6);
 }
 
 .defaultGrid {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   display: grid;
-  gap: 16px;
+  gap: var(--space-7);
   grid-template-columns: 1fr;
-  margin: 18px 0;
-  padding: 16px;
+  margin: var(--space-7) 0;
+  padding: var(--space-6);
 }
 
 .statusCell {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .statusCell dt {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--font-size-2xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .statusCell dd {
-  font-size: 15px;
+  font-size: var(--font-size-md);
   font-weight: 600;
   margin: 0;
 }
@@ -97,15 +150,15 @@
   appearance: none;
   background: var(--accent);
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   color: #fff;
   cursor: pointer;
   font: inherit;
-  font-size: 15px;
+  font-size: var(--font-size-md);
   font-weight: 700;
-  height: 48px;
+  height: var(--control-height-md);
   letter-spacing: 0;
-  padding: 0 22px;
+  padding: 0 var(--space-8);
   transition: transform 80ms ease, opacity 120ms ease;
   white-space: nowrap;
 }
@@ -114,15 +167,15 @@
   appearance: none;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   color: var(--fg);
   cursor: pointer;
   font: inherit;
-  font-size: 15px;
+  font-size: var(--font-size-md);
   font-weight: 700;
-  height: 48px;
+  height: var(--control-height-md);
   letter-spacing: 0;
-  padding: 0 18px;
+  padding: 0 var(--space-7);
   transition: background 120ms ease, border-color 120ms ease, opacity 120ms ease;
   white-space: nowrap;
 }
@@ -149,33 +202,33 @@
 
 .cardText {
   color: var(--muted);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-body);
   max-width: 58ch;
 }
 
 .installSummary {
   border-top: 1px solid var(--border);
   color: var(--muted);
-  font-size: 13px;
-  margin-top: 20px;
-  padding-top: 18px;
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-8);
+  padding-top: var(--space-7);
 }
 
 .installSummary dl {
   display: grid;
-  gap: 12px;
-  margin: 0 0 14px;
+  gap: var(--space-5);
+  margin: 0 0 var(--space-6);
 }
 
 .installSummary div {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
 }
 
 .installSummary dt {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--font-size-2xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;

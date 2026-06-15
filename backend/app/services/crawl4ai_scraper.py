@@ -1,4 +1,5 @@
 import json
+import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -19,30 +20,25 @@ class Crawl4AiScraper:
         return self.output_dir_for(source) / "crawl.md"
 
     def build_crawl_command(self, source: SourceRecord) -> list[str]:
-        crwl_exe = self.settings.project_root / "backend" / ".venv" / "Scripts" / "crwl.exe"
         crawler_config_path = self._write_crawler_config(source)
         browser_config_path = self._write_browser_config(source)
         command = [
-            str(crwl_exe) if crwl_exe.exists() else "crwl",
-            "crawl",
+            self._python_executable(),
+            str(Path(__file__).with_name("crawl4ai_runner.py")),
             source.location,
             "--crawler-config",
             str(crawler_config_path),
             "--browser-config",
             str(browser_config_path),
-            "--output",
-            "markdown",
             "--output-file",
             str(self.output_file_for(source)),
         ]
 
-        max_depth = int(source.metadata.get("max_depth", 0))
-        if max_depth > 0:
-            command.extend(
-                ["--deep-crawl", "bfs", "--max-pages", str(source.metadata.get("max_pages", 10))]
-            )
-
         return command
+
+    def _python_executable(self) -> str:
+        venv_python = self.settings.project_root / "backend" / ".venv" / "Scripts" / "python.exe"
+        return str(venv_python) if venv_python.exists() else sys.executable
 
     def _write_crawler_config(self, source: SourceRecord) -> Path:
         output_dir = self.output_dir_for(source)
@@ -121,8 +117,22 @@ class Crawl4AiScraper:
     def _pattern_filter(self, patterns: list[str], reverse: bool = False) -> dict[str, object]:
         return {
             "type": "URLPatternFilter",
-            "params": {"patterns": patterns, "reverse": reverse},
+            "params": {
+                "patterns": [self._normalize_crawl_pattern(pattern) for pattern in patterns],
+                "reverse": reverse,
+            },
         }
+
+    def _normalize_crawl_pattern(self, pattern: str) -> str:
+        stripped_pattern = pattern.strip()
+        if (
+            stripped_pattern.startswith("/")
+            and stripped_pattern.endswith("/")
+            and len(stripped_pattern) > 2
+        ):
+            return stripped_pattern[1:-1]
+
+        return stripped_pattern.replace("**", "*")
 
     def _subpage_pattern(self, url: str) -> str:
         return f"{url.rstrip('/')}*"

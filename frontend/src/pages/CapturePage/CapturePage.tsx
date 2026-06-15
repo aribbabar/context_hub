@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from 'react'
+import type { KeyboardEvent } from 'react'
 import type { CrawlScope, FormSubmitHandler, IndexJob, Message, ScrapeMode, SourceMode, SourceRecord, ViewName } from '../../types'
 import { SourceIdentityFields } from '../../components/forms/SourceIdentityFields/SourceIdentityFields'
 import { ModeTabs } from '../../components/source/ModeTabs/ModeTabs'
@@ -23,7 +25,6 @@ type WebForm = SourceForm & {
   excludePatterns: string
   scope: CrawlScope
   scrapeMode: ScrapeMode
-  headers: string
   preserveHashes: boolean
   followRedirects: boolean
   ignoreErrors: boolean
@@ -48,9 +49,36 @@ type CapturePageProps = {
   onRemoveLocalPath: (path: string) => void
   onRegisterLocal: FormSubmitHandler
   onRegisterWeb: FormSubmitHandler
+  onResetWebPreferences: () => void
   onNavigate: (view: ViewName) => void
   onSelectSource: (sourceId: string) => void
 }
+
+const scopeOptions: Array<{
+  value: CrawlScope
+  label: string
+  description: string
+  tooltip: string
+}> = [
+  {
+    value: 'subpages',
+    label: 'Subpages',
+    description: 'Only crawl below the exact starting URL.',
+    tooltip: 'Use this for a narrow section like /docs/introduction and its child pages.',
+  },
+  {
+    value: 'hostname',
+    label: 'Hostname',
+    description: 'Crawl any matching path on the same host.',
+    tooltip: 'Best default for docs sites. With /docs/* it stays on pages like neon.com/docs/...',
+  },
+  {
+    value: 'domain',
+    label: 'Domain',
+    description: 'Allow matching links across the root domain.',
+    tooltip: 'Use when docs move between subdomains, such as docs.example.com and www.example.com.',
+  },
+]
 
 export function CapturePage({
   activeLogs,
@@ -70,6 +98,7 @@ export function CapturePage({
   onRemoveLocalPath,
   onRegisterLocal,
   onRegisterWeb,
+  onResetWebPreferences,
   onNavigate,
   onSelectSource,
 }: CapturePageProps) {
@@ -166,6 +195,11 @@ export function CapturePage({
             />
             <details className={styles.advancedOptions}>
               <summary>Advanced crawl options</summary>
+              <div className={styles.advancedActions}>
+                <button className={styles.resetButton} onClick={onResetWebPreferences} type="button">
+                  Reset defaults
+                </button>
+              </div>
               <div className={styles.optionGrid}>
                 <div className={styles.field}>
                   <label htmlFor="web-max-pages">Max pages</label>
@@ -192,7 +226,10 @@ export function CapturePage({
                   />
                 </div>
                 <div className={styles.field}>
-                  <label htmlFor="web-max-concurrency">Concurrency</label>
+                  <div className={styles.labelRow}>
+                    <label htmlFor="web-max-concurrency">Concurrency</label>
+                    <FieldTooltip text="How many pages the crawler requests at once. Four is a safe default for speed without hammering docs sites." />
+                  </div>
                   <input
                     id="web-max-concurrency"
                     max="32"
@@ -204,32 +241,30 @@ export function CapturePage({
                   />
                 </div>
                 <div className={styles.field}>
-                  <label htmlFor="web-scope">Scope</label>
-                  <select
-                    id="web-scope"
-                    onChange={(event) =>
-                      onWebFormChange({ ...webForm, scope: event.target.value as WebForm['scope'] })
-                    }
+                  <div className={styles.labelRow}>
+                    <label htmlFor="web-scope">Scope</label>
+                    <FieldTooltip text="Hostname plus the default /docs include pattern usually captures the whole docs section. Subpages stays below the exact starting URL." />
+                  </div>
+                  <ScopeSelect
+                    onChange={(scope) => onWebFormChange({ ...webForm, scope })}
                     value={webForm.scope}
-                  >
-                    <option value="subpages">Subpages</option>
-                    <option value="hostname">Hostname</option>
-                    <option value="domain">Domain</option>
-                  </select>
+                  />
                 </div>
                 <div className={styles.field}>
                   <label htmlFor="web-scrape-mode">Scrape mode</label>
-                  <select
-                    id="web-scrape-mode"
-                    onChange={(event) =>
-                      onWebFormChange({ ...webForm, scrapeMode: event.target.value as WebForm['scrapeMode'] })
-                    }
-                    value={webForm.scrapeMode}
-                  >
-                    <option value="auto">Auto</option>
-                    <option value="fetch">Fetch</option>
-                    <option value="playwright">Playwright</option>
-                  </select>
+                  <div className={styles.selectControl}>
+                    <select
+                      id="web-scrape-mode"
+                      onChange={(event) =>
+                        onWebFormChange({ ...webForm, scrapeMode: event.target.value as WebForm['scrapeMode'] })
+                      }
+                      value={webForm.scrapeMode}
+                    >
+                      <option value="auto">Auto</option>
+                      <option value="fetch">Fetch</option>
+                      <option value="playwright">Playwright</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               <div className={styles.field}>
@@ -237,7 +272,7 @@ export function CapturePage({
                 <textarea
                   id="web-include-patterns"
                   onChange={(event) => onWebFormChange({ ...webForm, includePatterns: event.target.value })}
-                  placeholder="docs/*&#10;/^https:\/\/docs.example.com\/api\//"
+                  placeholder="/docs/*"
                   value={webForm.includePatterns}
                 />
               </div>
@@ -250,15 +285,6 @@ export function CapturePage({
                   value={webForm.excludePatterns}
                 />
               </div>
-              <div className={styles.field}>
-                <label htmlFor="web-headers">Custom HTTP headers</label>
-                <textarea
-                  id="web-headers"
-                  onChange={(event) => onWebFormChange({ ...webForm, headers: event.target.value })}
-                  placeholder="Authorization: Bearer token&#10;X-Docs-Version: latest"
-                  value={webForm.headers}
-                />
-              </div>
               <div className={styles.checkboxGrid}>
                 <label>
                   <input
@@ -266,7 +292,8 @@ export function CapturePage({
                     onChange={(event) => onWebFormChange({ ...webForm, preserveHashes: event.target.checked })}
                     type="checkbox"
                   />
-                  Preserve hash routes
+                  <span>Preserve hash routes</span>
+                  <FieldTooltip text="Keep URL fragments like #install as separate crawl targets when a docs site uses hash routes for real pages." />
                 </label>
                 <label>
                   <input
@@ -274,7 +301,8 @@ export function CapturePage({
                     onChange={(event) => onWebFormChange({ ...webForm, followRedirects: event.target.checked })}
                     type="checkbox"
                   />
-                  Follow redirects
+                  <span>Follow redirects</span>
+                  <FieldTooltip text="Allow the crawler to follow moved pages and canonical docs URLs." />
                 </label>
                 <label>
                   <input
@@ -282,7 +310,8 @@ export function CapturePage({
                     onChange={(event) => onWebFormChange({ ...webForm, ignoreErrors: event.target.checked })}
                     type="checkbox"
                   />
-                  Ignore scrape errors
+                  <span>Ignore scrape errors</span>
+                  <FieldTooltip text="Continue indexing when individual pages fail instead of failing the whole crawl." />
                 </label>
                 <label>
                   <input
@@ -290,7 +319,8 @@ export function CapturePage({
                     onChange={(event) => onWebFormChange({ ...webForm, clean: event.target.checked })}
                     type="checkbox"
                   />
-                  Clean before indexing
+                  <span>Clean before indexing</span>
+                  <FieldTooltip text="Replace the previous generated crawl output for this source before indexing the new run." />
                 </label>
               </div>
             </details>
@@ -417,4 +447,94 @@ function latestLogLine(logs: string) {
     .map((line) => line.trim())
     .filter(Boolean)
     .at(-1)
+}
+
+function ScopeSelect({ value, onChange }: { value: CrawlScope; onChange: (value: CrawlScope) => void }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const selectedOption = scopeOptions.find((option) => option.value === value) ?? scopeOptions[1]
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [isOpen])
+
+  function selectOption(option: CrawlScope) {
+    onChange(option)
+    setIsOpen(false)
+  }
+
+  function handleOptionKeyDown(event: KeyboardEvent<HTMLDivElement>, option: CrawlScope) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      selectOption(option)
+    }
+    if (event.key === 'Escape') {
+      setIsOpen(false)
+    }
+  }
+
+  return (
+    <div className={styles.scopeSelect} ref={rootRef}>
+      <button
+        aria-controls="web-scope-options"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        className={styles.scopeSelectButton}
+        id="web-scope"
+        onClick={() => setIsOpen((current) => !current)}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') setIsOpen(false)
+        }}
+        type="button"
+      >
+        <span>
+          <strong>{selectedOption.label}</strong>
+          <span>{selectedOption.description}</span>
+        </span>
+        <span className={styles.scopeChevron} aria-hidden="true" />
+      </button>
+      {isOpen ? (
+        <div className={styles.scopeMenu} id="web-scope-options" role="listbox" aria-label="Scope">
+          {scopeOptions.map((option) => (
+            <div
+              aria-selected={option.value === value}
+              className={option.value === value ? `${styles.scopeOption} ${styles.scopeOptionSelected}` : styles.scopeOption}
+              key={option.value}
+              onClick={() => selectOption(option.value)}
+              onKeyDown={(event) => handleOptionKeyDown(event, option.value)}
+              role="option"
+              tabIndex={0}
+            >
+              <span>
+                <strong>{option.label}</strong>
+                <span>{option.description}</span>
+              </span>
+              <span className={styles.scopeOptionHelp} aria-label={option.tooltip}>
+                ?
+                <span role="tooltip">{option.tooltip}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function FieldTooltip({ text }: { text: string }) {
+  return (
+    <span className={styles.tooltip} tabIndex={0} aria-label={text}>
+      ?
+      <span role="tooltip">{text}</span>
+    </span>
+  )
 }

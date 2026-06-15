@@ -1,7 +1,7 @@
 .message {
   color: var(--muted);
-  font-size: 14px;
-  margin-top: 18px;
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-7);
 }
 
 .success {
