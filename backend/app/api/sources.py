@@ -3,7 +3,6 @@ import subprocess
 
 from fastapi import APIRouter, HTTPException, status
 
-from app.core.config import get_settings
 from app.models.sources import (
     LocalFolderSourceRequest,
     SearchRequest,
@@ -21,7 +20,6 @@ from app.services.source_registry import SourceRegistry
 from app.services.app_settings import AppSettingsStore
 
 router = APIRouter(prefix="/sources", tags=["sources"])
-settings = get_settings()
 registry = SourceRegistry()
 docs_mcp = DocsMcpAdapter()
 crawl4ai = Crawl4AiScraper()
@@ -92,7 +90,7 @@ def _delete_source(source_id: str) -> SourceDeletionResponse:
         docs_mcp_command = docs_mcp.build_remove_command(source)
         completed = subprocess.run(
             docs_mcp_command,
-            cwd=settings.docs_mcp_dir,
+            cwd=docs_mcp.command_cwd(),
             env=app_settings.docs_mcp_env(),
             capture_output=True,
             text=True,
@@ -166,7 +164,7 @@ def search_source(request: SearchRequest) -> SearchResponse:
     command = docs_mcp.build_search_command(source, request.query, request.limit, request.exact_match)
     completed = subprocess.run(
         command,
-        cwd=settings.docs_mcp_dir,
+        cwd=docs_mcp.command_cwd(),
         env=app_settings.docs_mcp_env(),
         capture_output=True,
         text=True,

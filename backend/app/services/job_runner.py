@@ -135,7 +135,7 @@ class JobRunner:
             job.command = docs_command
             job.progress = max(job.progress, 60)
             self._upsert(job)
-            self._run_command(docs_command, self.settings.docs_mcp_dir, log_path)
+            self._run_command(docs_command, self.docs_mcp.command_cwd(), log_path)
 
             job.status = JobStatus.SUCCEEDED
             job.progress = 100

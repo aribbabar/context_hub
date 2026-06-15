@@ -14,7 +14,6 @@ class Settings(BaseSettings):
     jobs_dir: Path = data_dir / "jobs"
     docs_mcp_store_dir: Path = data_dir / "docs-mcp-store"
     docs_mcp_config_path: Path = data_dir / "docs-mcp-config.json"
-    docs_mcp_dir: Path = project_root / "docs-mcp-server"
     crawl4ai_dir: Path = project_root / "crawl4ai"
     command_timeout_seconds: int = 600
 

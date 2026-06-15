@@ -2,11 +2,11 @@ import json
 import sqlite3
 from contextlib import closing
 from pathlib import Path
-from shutil import which
 
 from app.core.config import get_settings
 from app.models.sources import SourceRecord
 from app.services.app_settings import AppSettingsStore
+from app.services.docs_mcp_runtime import DocsMcpRuntime
 from app.services.path_utils import path_to_file_url
 
 
@@ -16,9 +16,11 @@ class DocsMcpAdapter:
     def __init__(self) -> None:
         self.settings = get_settings()
         self.app_settings = AppSettingsStore()
-        self.node_command = which("node.exe") or which("node") or "node"
-        self.cli_entrypoint = self.settings.docs_mcp_dir / "dist" / "index.js"
+        self.runtime = DocsMcpRuntime()
         self.ensure_config()
+
+    def command_cwd(self) -> Path:
+        return self.runtime.command_cwd()
 
     def build_local_scrape_command(self, source: SourceRecord) -> list[str]:
         docs_url = source.docs_mcp_url or path_to_file_url(Path(source.working_path or source.location))
@@ -39,9 +41,7 @@ class DocsMcpAdapter:
     ) -> list[str]:
         max_depth = int(source.metadata.get("max_depth", 10))
         command = [
-            self.node_command,
-            "--enable-source-maps",
-            str(self.cli_entrypoint),
+            *self.runtime.command_prefix(),
             "scrape",
             source.name,
             docs_url,
@@ -96,9 +96,7 @@ class DocsMcpAdapter:
         exact_match: bool,
     ) -> list[str]:
         command = [
-            self.node_command,
-            "--enable-source-maps",
-            str(self.cli_entrypoint),
+            *self.runtime.command_prefix(),
             "search",
             source.name,
             query,
@@ -122,9 +120,7 @@ class DocsMcpAdapter:
 
     def build_remove_command(self, source: SourceRecord) -> list[str]:
         command = [
-            self.node_command,
-            "--enable-source-maps",
-            str(self.cli_entrypoint),
+            *self.runtime.command_prefix(),
             "remove",
             source.name,
             "--store-path",

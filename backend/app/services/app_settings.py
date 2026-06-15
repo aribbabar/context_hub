@@ -14,12 +14,14 @@ from app.models.settings import (
     EmbeddingSettings,
     OllamaStatus,
 )
+from app.services.docs_mcp_runtime import DocsMcpRuntime
 
 
 class AppSettingsStore:
     def __init__(self) -> None:
         self.settings = get_settings()
         self.settings_path = self.settings.data_dir / "settings.json"
+        self.docs_mcp_runtime = DocsMcpRuntime()
 
     def get(self) -> AppSettingsRecord:
         if not self.settings_path.exists():
@@ -138,13 +140,8 @@ class AppSettingsStore:
             env.pop(key, None)
 
     def _run_docs_mcp_config_set(self, path: str, value: str) -> list[str]:
-        npm_command = which("npm.cmd") or which("npm") or "npm"
         command = [
-            npm_command,
-            "--silent",
-            "run",
-            "cli",
-            "--",
+            *self.docs_mcp_runtime.command_prefix(),
             "config",
             "set",
             path,
@@ -153,7 +150,7 @@ class AppSettingsStore:
         ]
         completed = subprocess.run(
             command,
-            cwd=self.settings.docs_mcp_dir,
+            cwd=self.docs_mcp_runtime.command_cwd(),
             capture_output=True,
             text=True,
             encoding="utf-8",
