@@ -7,6 +7,7 @@ import type {
   Message,
   OllamaStatus,
 } from '../../types'
+import { DropdownSelect } from '../../components/ui/DropdownSelect/DropdownSelect'
 import { MessageLine } from '../../components/ui/MessageLine/MessageLine'
 import { PageHeading } from '../../components/ui/PageHeading/PageHeading'
 import styles from './SettingsPage.module.css'
@@ -22,6 +23,26 @@ type SettingsPageProps = {
   onSaveSettings: FormSubmitHandler
   onSettingsChange: (settings: EmbeddingSettings) => void
 }
+
+const embeddingModeOptions: Array<{
+  value: EmbeddingMode
+  label: string
+  description: string
+  tooltip: string
+}> = [
+  {
+    value: 'disabled',
+    label: 'Disabled',
+    description: 'Use keyword search without embedding generation.',
+    tooltip: 'Choose this when you do not want Context Hub to call a local embedding model.',
+  },
+  {
+    value: 'ollama',
+    label: 'Ollama',
+    description: 'Use a local Ollama embedding model.',
+    tooltip: 'Requires Ollama to be installed, running, and serving an embedding model.',
+  },
+]
 
 export function SettingsPage({
   docsMcpDefaults,
@@ -57,19 +78,18 @@ export function SettingsPage({
         <form onSubmit={onSaveSettings}>
           <div className={styles.field}>
             <label htmlFor="mode">Mode</label>
-            <select
+            <DropdownSelect
               id="mode"
-              onChange={(event) =>
+              label="Mode"
+              onChange={(mode) =>
                 onSettingsChange({
                   ...embeddingSettings,
-                  mode: event.target.value as EmbeddingMode,
+                  mode,
                 })
               }
+              options={embeddingModeOptions}
               value={embeddingSettings.mode}
-            >
-              <option value="disabled">Disabled</option>
-              <option value="ollama">Ollama</option>
-            </select>
+            />
           </div>
 
           <div className={styles.field}>

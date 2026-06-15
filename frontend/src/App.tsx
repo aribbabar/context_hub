@@ -19,7 +19,6 @@ import type {
   Message,
   OllamaStatus,
   ParameterPayload,
-  ScrapeMode,
   SearchResponse,
   SettingsResponse,
   SourceDeletionResponse,
@@ -127,7 +126,6 @@ type WebCrawlPreferences = {
   includePatterns: string
   excludePatterns: string
   scope: CrawlScope
-  scrapeMode: ScrapeMode
   preserveHashes: boolean
   followRedirects: boolean
   ignoreErrors: boolean
@@ -141,7 +139,6 @@ const defaultWebCrawlPreferences: WebCrawlPreferences = {
   includePatterns: DEFAULT_WEB_INCLUDE_PATTERNS,
   excludePatterns: DEFAULT_WEB_EXCLUDE_PATTERNS,
   scope: 'hostname',
-  scrapeMode: 'auto',
   preserveHashes: false,
   followRedirects: true,
   ignoreErrors: true,
@@ -271,7 +268,20 @@ function App() {
     const payload = (await response.json()) as { job: IndexJob; logs: string }
     setJobs((current) => [payload.job, ...current.filter((job) => job.id !== payload.job.id)])
     setActiveLogs(payload.logs)
-  }, [])
+    if (payload.job.status === 'succeeded' || payload.job.status === 'failed') {
+      void refreshSources()
+      const source = sources.find((currentSource) => currentSource.id === payload.job.source_id)
+      if (!source) return
+
+      setMessage((current) => {
+        if (current?.text !== `${source.name} is indexing`) return current
+
+        return payload.job.status === 'succeeded'
+          ? { text: `${source.name} indexed`, tone: 'success' }
+          : { text: `${source.name} indexing failed`, tone: 'error' }
+      })
+    }
+  }, [refreshSources, sources])
 
   useEffect(() => {
     let isActive = true
@@ -793,7 +803,7 @@ function webParameterPayload(form: WebFormState): ParameterPayload {
     include_patterns: parseLines(form.includePatterns),
     exclude_patterns: parseLines(form.excludePatterns),
     scope: form.scope,
-    scrape_mode: form.scrapeMode,
+    scrape_mode: 'auto',
     headers: {},
     preserve_hashes: form.preserveHashes,
     follow_redirects: form.followRedirects,
@@ -851,7 +861,6 @@ function writeStoredWebCrawlPreferences(form: WebCrawlPreferences) {
       includePatterns: form.includePatterns,
       excludePatterns: form.excludePatterns,
       scope: form.scope,
-      scrapeMode: form.scrapeMode,
       preserveHashes: form.preserveHashes,
       followRedirects: form.followRedirects,
       ignoreErrors: form.ignoreErrors,
@@ -874,9 +883,6 @@ function sanitizeWebCrawlPreferences(value: unknown): Partial<WebCrawlPreference
   if (typeof stored.excludePatterns === 'string') preferences.excludePatterns = stored.excludePatterns
   if (stored.scope === 'subpages' || stored.scope === 'hostname' || stored.scope === 'domain') {
     preferences.scope = stored.scope
-  }
-  if (stored.scrapeMode === 'auto' || stored.scrapeMode === 'fetch' || stored.scrapeMode === 'playwright') {
-    preferences.scrapeMode = stored.scrapeMode
   }
   if (typeof stored.preserveHashes === 'boolean') preferences.preserveHashes = stored.preserveHashes
   if (typeof stored.followRedirects === 'boolean') preferences.followRedirects = stored.followRedirects

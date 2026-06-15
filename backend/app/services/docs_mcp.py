@@ -61,14 +61,13 @@ class DocsMcpAdapter:
                 if generated_docs
                 else str(source.metadata.get("scope", "subpages"))
             ),
-            "--scrape-mode",
-            str(source.metadata.get("scrape_mode", "auto")),
         ]
 
         if source.version and source.version != "latest":
             command.extend(["--version", source.version])
 
         if not generated_docs:
+            command.extend(["--scrape-mode", str(source.metadata.get("scrape_mode", "auto"))])
             for pattern in source.metadata.get("include_patterns", []) or []:
                 command.extend(["--include-pattern", str(pattern)])
             for pattern in source.metadata.get("exclude_patterns", []) or []:

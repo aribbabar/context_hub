@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
-import type { KeyboardEvent } from 'react'
-import type { CrawlScope, FormSubmitHandler, IndexJob, Message, ScrapeMode, SourceMode, SourceRecord, ViewName } from '../../types'
+import type { CrawlScope, FormSubmitHandler, IndexJob, Message, SourceMode, SourceRecord, ViewName } from '../../types'
 import { SourceIdentityFields } from '../../components/forms/SourceIdentityFields/SourceIdentityFields'
 import { ModeTabs } from '../../components/source/ModeTabs/ModeTabs'
 import { Badge } from '../../components/ui/Badge/Badge'
+import { DropdownSelect } from '../../components/ui/DropdownSelect/DropdownSelect'
 import { MessageLine } from '../../components/ui/MessageLine/MessageLine'
 import styles from './CapturePage.module.css'
 
@@ -24,7 +23,6 @@ type WebForm = SourceForm & {
   includePatterns: string
   excludePatterns: string
   scope: CrawlScope
-  scrapeMode: ScrapeMode
   preserveHashes: boolean
   followRedirects: boolean
   ignoreErrors: boolean
@@ -61,16 +59,16 @@ const scopeOptions: Array<{
   tooltip: string
 }> = [
   {
-    value: 'subpages',
-    label: 'Subpages',
-    description: 'Only crawl below the exact starting URL.',
-    tooltip: 'Use this for a narrow section like /docs/introduction and its child pages.',
-  },
-  {
     value: 'hostname',
     label: 'Hostname',
     description: 'Crawl any matching path on the same host.',
     tooltip: 'Best default for docs sites. With /docs/* it stays on pages like neon.com/docs/...',
+  },
+  {
+    value: 'subpages',
+    label: 'Subpages',
+    description: 'Only crawl below the exact starting URL.',
+    tooltip: 'Use this for a narrow section like /docs/introduction and its child pages.',
   },
   {
     value: 'domain',
@@ -249,22 +247,6 @@ export function CapturePage({
                     onChange={(scope) => onWebFormChange({ ...webForm, scope })}
                     value={webForm.scope}
                   />
-                </div>
-                <div className={styles.field}>
-                  <label htmlFor="web-scrape-mode">Scrape mode</label>
-                  <div className={styles.selectControl}>
-                    <select
-                      id="web-scrape-mode"
-                      onChange={(event) =>
-                        onWebFormChange({ ...webForm, scrapeMode: event.target.value as WebForm['scrapeMode'] })
-                      }
-                      value={webForm.scrapeMode}
-                    >
-                      <option value="auto">Auto</option>
-                      <option value="fetch">Fetch</option>
-                      <option value="playwright">Playwright</option>
-                    </select>
-                  </div>
                 </div>
               </div>
               <div className={styles.field}>
@@ -450,83 +432,14 @@ function latestLogLine(logs: string) {
 }
 
 function ScopeSelect({ value, onChange }: { value: CrawlScope; onChange: (value: CrawlScope) => void }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const rootRef = useRef<HTMLDivElement>(null)
-  const selectedOption = scopeOptions.find((option) => option.value === value) ?? scopeOptions[1]
-
-  useEffect(() => {
-    if (!isOpen) return
-
-    function handlePointerDown(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-
-    document.addEventListener('pointerdown', handlePointerDown)
-    return () => document.removeEventListener('pointerdown', handlePointerDown)
-  }, [isOpen])
-
-  function selectOption(option: CrawlScope) {
-    onChange(option)
-    setIsOpen(false)
-  }
-
-  function handleOptionKeyDown(event: KeyboardEvent<HTMLDivElement>, option: CrawlScope) {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      selectOption(option)
-    }
-    if (event.key === 'Escape') {
-      setIsOpen(false)
-    }
-  }
-
   return (
-    <div className={styles.scopeSelect} ref={rootRef}>
-      <button
-        aria-controls="web-scope-options"
-        aria-expanded={isOpen}
-        aria-haspopup="listbox"
-        className={styles.scopeSelectButton}
-        id="web-scope"
-        onClick={() => setIsOpen((current) => !current)}
-        onKeyDown={(event) => {
-          if (event.key === 'Escape') setIsOpen(false)
-        }}
-        type="button"
-      >
-        <span>
-          <strong>{selectedOption.label}</strong>
-          <span>{selectedOption.description}</span>
-        </span>
-        <span className={styles.scopeChevron} aria-hidden="true" />
-      </button>
-      {isOpen ? (
-        <div className={styles.scopeMenu} id="web-scope-options" role="listbox" aria-label="Scope">
-          {scopeOptions.map((option) => (
-            <div
-              aria-selected={option.value === value}
-              className={option.value === value ? `${styles.scopeOption} ${styles.scopeOptionSelected}` : styles.scopeOption}
-              key={option.value}
-              onClick={() => selectOption(option.value)}
-              onKeyDown={(event) => handleOptionKeyDown(event, option.value)}
-              role="option"
-              tabIndex={0}
-            >
-              <span>
-                <strong>{option.label}</strong>
-                <span>{option.description}</span>
-              </span>
-              <span className={styles.scopeOptionHelp} aria-label={option.tooltip}>
-                ?
-                <span role="tooltip">{option.tooltip}</span>
-              </span>
-            </div>
-          ))}
-        </div>
-      ) : null}
-    </div>
+    <DropdownSelect
+      id="web-scope"
+      label="Scope"
+      onChange={onChange}
+      options={scopeOptions}
+      value={value}
+    />
   )
 }
 

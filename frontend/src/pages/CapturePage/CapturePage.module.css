@@ -60,7 +60,6 @@
 }
 
 .field input,
-.field select,
 .field textarea {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -72,182 +71,9 @@
   width: 100%;
 }
 
-.field input,
-.field select {
+.field input {
   height: var(--control-height-lg);
   padding: 0 var(--space-5);
-}
-
-.field select {
-  appearance: none;
-  background: transparent;
-  cursor: pointer;
-  padding-right: var(--space-13);
-}
-
-.selectControl {
-  background:
-    linear-gradient(45deg, transparent 50%, var(--muted) 50%) calc(100% - 18px) 50% / 5px 5px no-repeat,
-    linear-gradient(135deg, var(--muted) 50%, transparent 50%) calc(100% - 13px) 50% / 5px 5px no-repeat,
-    var(--bg);
-  border-radius: var(--radius-lg);
-  position: relative;
-}
-
-.selectControl:focus-within {
-  border-radius: var(--radius-lg);
-}
-
-.scopeSelect {
-  position: relative;
-}
-
-.scopeSelectButton {
-  align-items: center;
-  appearance: none;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  color: var(--fg);
-  cursor: pointer;
-  display: flex;
-  font: inherit;
-  gap: var(--space-5);
-  min-height: var(--control-height-lg);
-  outline: none;
-  padding: var(--space-3) var(--space-5);
-  text-align: left;
-  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
-  width: 100%;
-}
-
-.scopeSelectButton:hover {
-  background: var(--surface);
-  border-color: color-mix(in oklch, var(--muted) 55%, var(--border));
-}
-
-.scopeSelectButton:focus-visible {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 var(--focus-ring-size) var(--accent-soft);
-}
-
-.scopeSelectButton > span:first-child,
-.scopeOption > span:first-child {
-  display: grid;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.scopeSelectButton strong,
-.scopeOption strong {
-  font-size: var(--font-size-md);
-  font-weight: 700;
-}
-
-.scopeSelectButton span span,
-.scopeOption span span {
-  color: var(--muted);
-  font-size: var(--font-size-xs);
-  line-height: 1.35;
-}
-
-.scopeChevron {
-  border-bottom: 1.5px solid var(--muted);
-  border-right: 1.5px solid var(--muted);
-  flex: 0 0 auto;
-  height: var(--space-3);
-  margin-left: auto;
-  transform: rotate(45deg) translateY(-1px);
-  width: var(--space-3);
-}
-
-.scopeMenu {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.14);
-  display: grid;
-  gap: var(--space-1);
-  left: 0;
-  padding: var(--space-2);
-  position: absolute;
-  right: 0;
-  top: calc(100% + var(--space-2));
-  z-index: 10;
-}
-
-.scopeOption {
-  align-items: center;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  color: var(--fg);
-  cursor: pointer;
-  display: flex;
-  gap: var(--space-4);
-  min-height: var(--control-height-md);
-  outline: none;
-  padding: var(--space-3) var(--space-4);
-  position: relative;
-  transition: background 120ms ease, border-color 120ms ease;
-}
-
-.scopeOption:hover,
-.scopeOption:focus-visible {
-  background: var(--bg);
-  border-color: var(--border);
-}
-
-.scopeOptionSelected {
-  background: var(--accent-soft);
-  border-color: color-mix(in oklch, var(--accent) 34%, var(--border));
-}
-
-.scopeOptionHelp {
-  align-items: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  color: var(--muted);
-  display: inline-grid;
-  flex: 0 0 auto;
-  font-size: var(--font-size-2xs);
-  font-weight: 800;
-  height: var(--space-8);
-  line-height: 1;
-  margin-left: auto;
-  place-items: center;
-  position: relative;
-  width: var(--space-8);
-}
-
-.scopeOptionHelp span {
-  background: var(--fg);
-  border-radius: var(--radius-md);
-  bottom: calc(100% + var(--space-3));
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
-  color: var(--surface);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  line-height: 1.45;
-  max-width: 260px;
-  opacity: 0;
-  padding: var(--space-3) var(--space-4);
-  pointer-events: none;
-  position: absolute;
-  right: 0;
-  text-align: left;
-  transform: translateY(var(--space-1));
-  transition: opacity 120ms ease, transform 120ms ease;
-  visibility: hidden;
-  width: max-content;
-  z-index: 11;
-}
-
-.scopeOptionHelp:hover span,
-.scopeOption:focus-visible .scopeOptionHelp span {
-  opacity: 1;
-  transform: translateY(0);
-  visibility: visible;
 }
 
 .field textarea {
@@ -257,7 +83,6 @@
 }
 
 .field input:focus,
-.field select:focus,
 .field textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 var(--focus-ring-size) var(--accent-soft);
@@ -310,7 +135,11 @@
 .optionGrid {
   display: grid;
   gap: var(--space-7);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns:
+    minmax(104px, 0.75fr)
+    minmax(104px, 0.75fr)
+    minmax(132px, 0.85fr)
+    minmax(260px, 1.65fr);
 }
 
 .checkboxGrid {
@@ -716,6 +545,12 @@
   padding: var(--space-4) var(--space-5);
 }
 
+@media (max-width: 960px) {
+  .optionGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 720px) {
   .hero h1 {
     font-size: var(--font-size-hero-mobile);
@@ -730,8 +565,11 @@
     flex-direction: column;
   }
 
-  .optionGrid,
   .checkboxGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .optionGrid {
     grid-template-columns: 1fr;
   }
 

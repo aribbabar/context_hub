@@ -1,0 +1,151 @@
+.select {
+  position: relative;
+}
+
+.selectButton {
+  align-items: center;
+  appearance: none;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--fg);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: var(--space-5);
+  min-height: var(--control-height-lg);
+  outline: none;
+  padding: var(--space-3) var(--space-5);
+  text-align: left;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  width: 100%;
+}
+
+.selectButton:hover {
+  background: var(--surface);
+  border-color: color-mix(in oklch, var(--muted) 55%, var(--border));
+}
+
+.selectButton:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 var(--focus-ring-size) var(--accent-soft);
+}
+
+.selectButton > span:first-child,
+.option > span:first-child {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.selectButton strong,
+.option strong {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+}
+
+.selectButton span span,
+.option span span {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.35;
+}
+
+.chevron {
+  border-bottom: 1.5px solid var(--muted);
+  border-right: 1.5px solid var(--muted);
+  flex: 0 0 auto;
+  height: var(--space-3);
+  margin-left: auto;
+  transform: rotate(45deg) translateY(-1px);
+  width: var(--space-3);
+}
+
+.menu {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.14);
+  display: grid;
+  gap: var(--space-1);
+  left: 0;
+  padding: var(--space-2);
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-2));
+  z-index: 10;
+}
+
+.option {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--fg);
+  cursor: pointer;
+  display: flex;
+  gap: var(--space-4);
+  min-height: var(--control-height-md);
+  outline: none;
+  padding: var(--space-3) var(--space-4);
+  position: relative;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.option:hover,
+.option:focus-visible {
+  background: var(--bg);
+  border-color: var(--border);
+}
+
+.optionSelected {
+  background: var(--accent-soft);
+  border-color: color-mix(in oklch, var(--accent) 34%, var(--border));
+}
+
+.optionHelp {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+  display: inline-grid;
+  flex: 0 0 auto;
+  font-size: var(--font-size-2xs);
+  font-weight: 800;
+  height: var(--space-8);
+  line-height: 1;
+  margin-left: auto;
+  place-items: center;
+  position: relative;
+  width: var(--space-8);
+}
+
+.optionHelp span {
+  background: var(--fg);
+  border-radius: var(--radius-md);
+  bottom: calc(100% + var(--space-3));
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+  color: var(--surface);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  line-height: 1.45;
+  max-width: 260px;
+  opacity: 0;
+  padding: var(--space-3) var(--space-4);
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  text-align: left;
+  transform: translateY(var(--space-1));
+  transition: opacity 120ms ease, transform 120ms ease;
+  visibility: hidden;
+  width: max-content;
+  z-index: 11;
+}
+
+.optionHelp:hover span,
+.option:focus-visible .optionHelp span {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+}

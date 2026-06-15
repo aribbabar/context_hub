@@ -48,8 +48,8 @@ class WebSourceRequest(BaseModel):
     max_concurrency: int = Field(default=4, ge=1, le=32)
     include_patterns: list[str] = Field(default_factory=list)
     exclude_patterns: list[str] = Field(default_factory=list)
-    scope: Literal["subpages", "hostname", "domain"] = "subpages"
-    scrape_mode: Literal["auto", "fetch", "playwright"] = "auto"
+    scope: Literal["subpages", "hostname", "domain"] = "hostname"
+    scrape_mode: Literal["auto"] = "auto"
     headers: dict[str, str] = Field(default_factory=dict)
     preserve_hashes: bool = False
     follow_redirects: bool = True

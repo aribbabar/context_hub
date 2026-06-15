@@ -6,7 +6,6 @@ export type JobStatus = 'queued' | 'running' | 'succeeded' | 'failed'
 export type EmbeddingMode = 'disabled' | 'ollama'
 export type SourceMode = 'local' | 'web'
 export type CrawlScope = 'subpages' | 'hostname' | 'domain'
-export type ScrapeMode = 'auto' | 'fetch' | 'playwright'
 export type ViewName = 'capture' | 'sources' | 'settings'
 export type Message = { text: string; tone?: 'success' | 'error' } | null
 
@@ -113,7 +112,7 @@ export type ParameterPayload = {
   include_patterns: string[]
   exclude_patterns: string[]
   scope: CrawlScope
-  scrape_mode: ScrapeMode
+  scrape_mode: 'auto'
   headers: Record<string, string>
   preserve_hashes: boolean
   follow_redirects: boolean
