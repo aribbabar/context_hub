@@ -1,17 +1,21 @@
-import type { FormSubmitHandler, IndexJob, SourceRecord } from '../../types'
+import type { FormSubmitHandler, IndexJob, Message, SourceRecord } from '../../types'
 import { Badge } from '../../components/ui/Badge/Badge'
+import { MessageLine } from '../../components/ui/MessageLine/MessageLine'
 import { PageHeading } from '../../components/ui/PageHeading/PageHeading'
 import styles from './SourcesPage.module.css'
 
 type SourcesPageProps = {
   activeLogs: string
+  deletingSourceId: string | null
   isSearching: boolean
   latestJob: IndexJob | undefined
+  message: Message
   query: string
   searchLimit: number
   searchOutput: string
   selectedSource: SourceRecord | undefined
   sources: SourceRecord[]
+  onDeleteSource: (sourceId: string) => void
   onQueryChange: (query: string) => void
   onRefreshSources: () => Promise<void>
   onSearchDocs: FormSubmitHandler
@@ -22,13 +26,16 @@ type SourcesPageProps = {
 
 export function SourcesPage({
   activeLogs,
+  deletingSourceId,
   isSearching,
   latestJob,
+  message,
   query,
   searchLimit,
   searchOutput,
   selectedSource,
   sources,
+  onDeleteSource,
   onQueryChange,
   onRefreshSources,
   onSearchDocs,
@@ -50,6 +57,7 @@ export function SourcesPage({
             Refresh
           </button>
         </div>
+        <MessageLine message={message} />
 
         {sources.length ? (
           <div className={styles.tableWrap}>
@@ -61,6 +69,7 @@ export function SourcesPage({
                   <th>Version</th>
                   <th>Status</th>
                   <th>Location</th>
+                  <th aria-label="Actions" />
                 </tr>
               </thead>
               <tbody>
@@ -80,6 +89,19 @@ export function SourcesPage({
                     </td>
                     <td className={styles.locationCell} title={source.origin_location}>
                       {source.origin_location}
+                    </td>
+                    <td className={styles.actionCell}>
+                      <button
+                        className={styles.dangerButton}
+                        disabled={deletingSourceId === source.id}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          onDeleteSource(source.id)
+                        }}
+                        type="button"
+                      >
+                        {deletingSourceId === source.id ? 'Deleting' : 'Delete'}
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -112,9 +134,24 @@ export function SourcesPage({
                   <dd>{selectedSource.docs_mcp_url ?? 'Not generated yet'}</dd>
                 </div>
               </dl>
-              <button className={styles.primaryButton} onClick={onStartIndexing} type="button">
-                Run index job
-              </button>
+              <div className={styles.sourceActions}>
+                <button
+                  className={styles.primaryButton}
+                  disabled={deletingSourceId === selectedSource.id}
+                  onClick={onStartIndexing}
+                  type="button"
+                >
+                  Run index job
+                </button>
+                <button
+                  className={styles.dangerButton}
+                  disabled={deletingSourceId === selectedSource.id}
+                  onClick={() => onDeleteSource(selectedSource.id)}
+                  type="button"
+                >
+                  {deletingSourceId === selectedSource.id ? 'Deleting' : 'Delete source'}
+                </button>
+              </div>
             </>
           ) : (
             <div className={styles.emptyState}>Select a source from the registry.</div>

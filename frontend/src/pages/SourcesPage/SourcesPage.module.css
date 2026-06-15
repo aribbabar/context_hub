@@ -24,7 +24,8 @@
 }
 
 .primaryButton,
-.secondaryButton {
+.secondaryButton,
+.dangerButton {
   appearance: none;
   border-radius: 8px;
   cursor: pointer;
@@ -58,8 +59,19 @@
   border-color: var(--muted);
 }
 
+.dangerButton {
+  background: transparent;
+  border: 1px solid oklch(70% 0.14 25);
+  color: oklch(48% 0.16 25);
+}
+
+.dangerButton:hover {
+  background: oklch(97% 0.025 25);
+}
+
 .primaryButton:disabled,
-.secondaryButton:disabled {
+.secondaryButton:disabled,
+.dangerButton:disabled {
   cursor: wait;
   opacity: 0.55;
   transform: none;
@@ -114,6 +126,11 @@
   white-space: nowrap;
 }
 
+.actionCell {
+  text-align: right;
+  width: 1%;
+}
+
 .detailGrid {
   display: grid;
   gap: 20px;
@@ -144,6 +161,12 @@
   font-size: 13px;
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+.sourceActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .jobStatus {

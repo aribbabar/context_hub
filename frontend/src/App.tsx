@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { AppHeader } from './components/layout/AppHeader/AppHeader'
+import { ConfirmationModal } from './components/ui/ConfirmationModal/ConfirmationModal'
 import { CapturePage } from './pages/CapturePage/CapturePage'
 import { SettingsPage } from './pages/SettingsPage/SettingsPage'
 import { SourcesPage } from './pages/SourcesPage/SourcesPage'
@@ -13,6 +14,7 @@ import type {
   OllamaStatus,
   ParameterPayload,
   SettingsResponse,
+  SourceDeletionResponse,
   SourceMode,
   SourceRecord,
   SourceRegistrationResponse,
@@ -60,6 +62,8 @@ function App() {
   const [searchLimit, setSearchLimit] = useState(5)
   const [searchOutput, setSearchOutput] = useState('')
   const [isSearching, setIsSearching] = useState(false)
+  const [deletingSourceId, setDeletingSourceId] = useState<string | null>(null)
+  const [sourceIdPendingDeletion, setSourceIdPendingDeletion] = useState<string | null>(null)
   const [isSavingSettings, setIsSavingSettings] = useState(false)
   const [isInstallingDocsMcpDefaults, setIsInstallingDocsMcpDefaults] = useState(false)
   const [docsMcpDefaults, setDocsMcpDefaults] = useState<DocsMcpDefaultsInstallResult | null>(null)
@@ -89,6 +93,10 @@ function App() {
   }, [jobs, selectedSource])
 
   const recentSources = sortedSources.slice(0, 5)
+  const sourcePendingDeletion = useMemo(
+    () => sources.find((source) => source.id === sourceIdPendingDeletion),
+    [sourceIdPendingDeletion, sources],
+  )
 
   const refreshSources = useCallback(async () => {
     const response = await fetch(`${API_BASE_URL}/api/sources`)
@@ -99,7 +107,11 @@ function App() {
     const payload = (await response.json()) as SourcesResponse
     setSources(payload.sources)
     setJobs(payload.jobs)
-    setSelectedSourceId((current) => current || payload.sources[0]?.id || '')
+    setSelectedSourceId((current) =>
+      current && payload.sources.some((source) => source.id === current)
+        ? current
+        : payload.sources[0]?.id || '',
+    )
   }, [])
 
   const refreshSettings = useCallback(async () => {
@@ -292,6 +304,57 @@ function App() {
     }
   }
 
+  function requestDeleteSource(sourceId: string) {
+    const source = sources.find((currentSource) => currentSource.id === sourceId)
+    if (!source) return
+    setSourceIdPendingDeletion(sourceId)
+  }
+
+  function cancelDeleteSource() {
+    if (deletingSourceId) return
+    setSourceIdPendingDeletion(null)
+  }
+
+  async function confirmDeleteSource() {
+    const sourceId = sourceIdPendingDeletion
+    const source = sourcePendingDeletion
+    if (!sourceId || !source) return
+    setDeletingSourceId(sourceId)
+    setMessage(null)
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/sources/${sourceId}/delete`, {
+        method: 'POST',
+      })
+      if (!response.ok) {
+        throw new Error(await readErrorMessage(response))
+      }
+
+      const payload = (await response.json()) as SourceDeletionResponse
+      const cleanupNote = payload.docs_mcp_removed
+        ? ' and removed its docs-mcp index'
+        : payload.docs_mcp_skipped
+          ? ''
+          : ', but docs-mcp cleanup did not complete'
+
+      setSources((currentSources) => currentSources.filter((currentSource) => currentSource.id !== sourceId))
+      setJobs((currentJobs) => currentJobs.filter((job) => job.source_id !== sourceId))
+      setSelectedSourceId((current) => (current === sourceId ? '' : current))
+      setActiveLogs('')
+      setSearchOutput('')
+      setSourceIdPendingDeletion(null)
+      setMessage({ text: `${source.name} deleted${cleanupNote}`, tone: 'success' })
+      await refreshSources()
+    } catch (error) {
+      setMessage({
+        text: error instanceof Error ? error.message : 'Unable to delete source',
+        tone: 'error',
+      })
+    } finally {
+      setDeletingSourceId(null)
+    }
+  }
+
   async function searchDocs(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!selectedSource) return
@@ -411,6 +474,9 @@ function App() {
           searchOutput={searchOutput}
           selectedSource={selectedSource}
           sources={sortedSources}
+          deletingSourceId={deletingSourceId}
+          message={message}
+          onDeleteSource={requestDeleteSource}
           onQueryChange={setQuery}
           onRefreshSources={refreshSources}
           onSearchDocs={searchDocs}
@@ -433,6 +499,21 @@ function App() {
           onSettingsChange={setEmbeddingSettings}
         />
       ) : null}
+
+      <ConfirmationModal
+        confirmLabel="Delete source"
+        isOpen={Boolean(sourcePendingDeletion)}
+        isPending={Boolean(deletingSourceId)}
+        message={
+          sourcePendingDeletion
+            ? `Delete ${sourcePendingDeletion.name} from Context Hub? This removes its registry entry, generated files, job logs, and indexed docs when no other source shares the same name and version.`
+            : ''
+        }
+        title="Delete source"
+        tone="danger"
+        onCancel={cancelDeleteSource}
+        onConfirm={confirmDeleteSource}
+      />
     </div>
   )
 }
@@ -451,6 +532,20 @@ function defaultPayload(depth: number): ParameterPayload {
     ignore_errors: true,
     clean: true,
   }
+}
+
+async function readErrorMessage(response: Response) {
+  const text = await response.text()
+  if (!text) return 'Request failed'
+
+  try {
+    const payload = JSON.parse(text) as { detail?: unknown }
+    if (typeof payload.detail === 'string') return payload.detail
+  } catch {
+    return text
+  }
+
+  return text
 }
 
 export default App

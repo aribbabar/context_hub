@@ -75,6 +75,15 @@ class SourceRegistrationResponse(BaseModel):
     command_preview: list[str]
 
 
+class SourceDeletionResponse(BaseModel):
+    deleted_source: SourceRecord
+    docs_mcp_command: list[str] | None = None
+    docs_mcp_stdout: str = ""
+    docs_mcp_stderr: str = ""
+    docs_mcp_removed: bool = False
+    docs_mcp_skipped: bool = False
+
+
 class SourceIndexRequest(BaseModel):
     source_id: str
 

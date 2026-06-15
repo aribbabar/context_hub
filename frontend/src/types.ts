@@ -37,6 +37,15 @@ export type SourcesResponse = {
   jobs: IndexJob[]
 }
 
+export type SourceDeletionResponse = {
+  deleted_source: SourceRecord
+  docs_mcp_command: string[] | null
+  docs_mcp_stdout: string
+  docs_mcp_stderr: string
+  docs_mcp_removed: boolean
+  docs_mcp_skipped: boolean
+}
+
 export type EmbeddingSettings = {
   mode: EmbeddingMode
   ollama_base_url: string

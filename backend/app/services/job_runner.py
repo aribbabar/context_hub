@@ -50,6 +50,38 @@ class JobRunner:
             return None
         return sorted(jobs, key=lambda job: job.created_at, reverse=True)[0]
 
+    def has_active_job_for_source(self, source_id: str) -> bool:
+        return any(
+            job.source_id == source_id and job.status in {JobStatus.QUEUED, JobStatus.RUNNING}
+            for job in self.list_jobs()
+        )
+
+    def delete_jobs_for_source(self, source_id: str) -> None:
+        jobs = self._read()
+        remaining_jobs = {
+            job_id: job
+            for job_id, job in jobs.items()
+            if job.source_id != source_id
+        }
+
+        for job in jobs.values():
+            if job.source_id == source_id:
+                log_path = Path(job.log_path)
+                if self._is_under_data_dir(log_path) and log_path.exists():
+                    log_path.unlink()
+
+        self.jobs_path.parent.mkdir(parents=True, exist_ok=True)
+        serialized = {job_id: job.model_dump(mode="json") for job_id, job in remaining_jobs.items()}
+        self.jobs_path.write_text(json.dumps(serialized, indent=2), encoding="utf-8")
+
+    def _is_under_data_dir(self, path: Path) -> bool:
+        try:
+            resolved_path = path.resolve()
+            resolved_data_dir = self.settings.data_dir.resolve()
+        except OSError:
+            return False
+        return resolved_path != resolved_data_dir and resolved_data_dir in resolved_path.parents
+
     def read_logs(self, job_id: str) -> str:
         job = self.get_job(job_id)
         if job is None:

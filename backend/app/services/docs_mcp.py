@@ -103,6 +103,26 @@ class DocsMcpAdapter:
 
         return command
 
+    def build_remove_command(self, source: SourceRecord) -> list[str]:
+        command = [
+            self.npm_command,
+            "--silent",
+            "run",
+            "cli",
+            "--",
+            "remove",
+            source.name,
+            "--store-path",
+            str(self.settings.docs_mcp_store_dir),
+            "--config",
+            str(self.settings.docs_mcp_config_path),
+        ]
+
+        if source.version and source.version != "latest":
+            command.extend(["--version", source.version])
+
+        return command
+
     def ensure_config(self) -> None:
         config = {
             "app": self.app_settings.docs_mcp_config_app_section(),

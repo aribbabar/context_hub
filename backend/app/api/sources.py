@@ -8,8 +8,10 @@ from app.models.sources import (
     LocalFolderSourceRequest,
     SearchRequest,
     SearchResponse,
+    SourceDeletionResponse,
     SourceIndexRequest,
     SourceRegistrationResponse,
+    SourceStatus,
     WebSourceRequest,
 )
 from app.services.crawl4ai_scraper import Crawl4AiScraper
@@ -58,6 +60,63 @@ def get_source(source_id: str):
     if source is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source not found")
     return {"source": source, "latest_job": jobs.latest_job_for_source(source_id)}
+
+
+@router.delete("/{source_id}", response_model=SourceDeletionResponse)
+def delete_source(source_id: str) -> SourceDeletionResponse:
+    return _delete_source(source_id)
+
+
+@router.post("/{source_id}/delete", response_model=SourceDeletionResponse)
+def delete_source_action(source_id: str) -> SourceDeletionResponse:
+    return _delete_source(source_id)
+
+
+def _delete_source(source_id: str) -> SourceDeletionResponse:
+    source = registry.get_source(source_id)
+    if source is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source not found")
+    if jobs.has_active_job_for_source(source_id):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Source has an active indexing job. Wait for it to finish before deleting.",
+        )
+
+    docs_mcp_command = None
+    docs_mcp_stdout = ""
+    docs_mcp_stderr = ""
+    docs_mcp_removed = False
+    docs_mcp_skipped = registry.has_equivalent_source(source) or source.status == SourceStatus.REGISTERED
+
+    if not docs_mcp_skipped:
+        docs_mcp_command = docs_mcp.build_remove_command(source)
+        completed = subprocess.run(
+            docs_mcp_command,
+            cwd=settings.docs_mcp_dir,
+            env=app_settings.docs_mcp_env(),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+        docs_mcp_stdout = completed.stdout
+        docs_mcp_stderr = completed.stderr
+        docs_mcp_removed = completed.returncode == 0
+
+    deleted_source = registry.delete_source(source_id)
+    if deleted_source is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source not found")
+
+    jobs.delete_jobs_for_source(source_id)
+    return SourceDeletionResponse(
+        deleted_source=deleted_source,
+        docs_mcp_command=docs_mcp_command,
+        docs_mcp_stdout=docs_mcp_stdout,
+        docs_mcp_stderr=docs_mcp_stderr,
+        docs_mcp_removed=docs_mcp_removed,
+        docs_mcp_skipped=docs_mcp_skipped,
+    )
 
 
 @router.post("/{source_id}/index")
