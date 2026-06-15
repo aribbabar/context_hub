@@ -25,9 +25,19 @@ class DocsMcpAdapter:
         return self.build_scrape_command(source, docs_url)
 
     def build_generated_docs_scrape_command(self, source: SourceRecord, docs_path: Path) -> list[str]:
-        return self.build_scrape_command(source, path_to_file_url(docs_path))
+        return self.build_scrape_command(
+            source,
+            path_to_file_url(docs_path),
+            generated_docs=True,
+        )
 
-    def build_scrape_command(self, source: SourceRecord, docs_url: str) -> list[str]:
+    def build_scrape_command(
+        self,
+        source: SourceRecord,
+        docs_url: str,
+        generated_docs: bool = False,
+    ) -> list[str]:
+        max_depth = int(source.metadata.get("max_depth", 10))
         command = [
             self.node_command,
             "--enable-source-maps",
@@ -42,11 +52,15 @@ class DocsMcpAdapter:
             "--max-pages",
             str(source.metadata.get("max_pages", 100)),
             "--max-depth",
-            str(source.metadata.get("max_depth", 10)),
+            str(max(1, max_depth) if generated_docs else max_depth),
             "--max-concurrency",
             str(source.metadata.get("max_concurrency", 4)),
             "--scope",
-            str(source.metadata.get("scope", "subpages")),
+            (
+                "subpages"
+                if generated_docs
+                else str(source.metadata.get("scope", "subpages"))
+            ),
             "--scrape-mode",
             str(source.metadata.get("scrape_mode", "auto")),
         ]
@@ -54,19 +68,20 @@ class DocsMcpAdapter:
         if source.version and source.version != "latest":
             command.extend(["--version", source.version])
 
-        for pattern in source.metadata.get("include_patterns", []) or []:
-            command.extend(["--include-pattern", str(pattern)])
-        for pattern in source.metadata.get("exclude_patterns", []) or []:
-            command.extend(["--exclude-pattern", str(pattern)])
-        headers = source.metadata.get("headers", {})
-        if isinstance(headers, dict):
-            for name, value in headers.items():
-                command.extend(["--header", f"{name}:{value}"])
+        if not generated_docs:
+            for pattern in source.metadata.get("include_patterns", []) or []:
+                command.extend(["--include-pattern", str(pattern)])
+            for pattern in source.metadata.get("exclude_patterns", []) or []:
+                command.extend(["--exclude-pattern", str(pattern)])
+            headers = source.metadata.get("headers", {})
+            if isinstance(headers, dict):
+                for name, value in headers.items():
+                    command.extend(["--header", f"{name}:{value}"])
 
-        if source.metadata.get("preserve_hashes", False):
-            command.append("--preserve-hashes")
-        if not source.metadata.get("follow_redirects", True):
-            command.append("--no-follow-redirects")
+            if source.metadata.get("preserve_hashes", False):
+                command.append("--preserve-hashes")
+            if not source.metadata.get("follow_redirects", True):
+                command.append("--no-follow-redirects")
         if not source.metadata.get("ignore_errors", True):
             command.extend(["--ignore-errors", "false"])
         if not source.metadata.get("clean", True):

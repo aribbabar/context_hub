@@ -39,7 +39,7 @@ class SourceRegistry:
 
     def register_web_source(self, request: WebSourceRequest) -> SourceRecord:
         source_id = uuid4().hex
-        crawl_output_path = self.settings.indexed_docs_dir / source_id / "crawl.md"
+        crawl_output_path = self.settings.indexed_docs_dir / source_id / "pages"
         source = SourceRecord(
             id=source_id,
             kind=SourceKind.WEB,

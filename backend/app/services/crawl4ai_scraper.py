@@ -16,8 +16,8 @@ class Crawl4AiScraper:
     def output_dir_for(self, source: SourceRecord) -> Path:
         return self.settings.indexed_docs_dir / source.id
 
-    def output_file_for(self, source: SourceRecord) -> Path:
-        return self.output_dir_for(source) / "crawl.md"
+    def output_pages_dir_for(self, source: SourceRecord) -> Path:
+        return self.output_dir_for(source) / "pages"
 
     def build_crawl_command(self, source: SourceRecord) -> list[str]:
         crawler_config_path = self._write_crawler_config(source)
@@ -30,8 +30,8 @@ class Crawl4AiScraper:
             str(crawler_config_path),
             "--browser-config",
             str(browser_config_path),
-            "--output-file",
-            str(self.output_file_for(source)),
+            "--output-dir",
+            str(self.output_pages_dir_for(source)),
         ]
 
         return command

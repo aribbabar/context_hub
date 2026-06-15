@@ -110,11 +110,11 @@ class JobRunner:
 
         try:
             if source.kind == SourceKind.WEB:
-                crawl_file = self.crawl4ai.output_file_for(source)
-                crawl_file.parent.mkdir(parents=True, exist_ok=True)
+                crawl_output_dir = self.crawl4ai.output_pages_dir_for(source)
+                crawl_output_dir.mkdir(parents=True, exist_ok=True)
                 self._run_command(self.crawl4ai.build_crawl_command(source), self.settings.project_root, log_path)
-                source.docs_mcp_url = path_to_file_url(crawl_file)
-                source.working_path = str(crawl_file)
+                source.docs_mcp_url = path_to_file_url(crawl_output_dir)
+                source.working_path = str(crawl_output_dir)
                 job.progress = 55
                 self._upsert(job)
                 self.registry.update_source(source)
@@ -123,7 +123,15 @@ class JobRunner:
             if docs_url is None:
                 raise RuntimeError("Source does not have a docs-mcp URL")
 
-            docs_command = self.docs_mcp.build_scrape_command(source, docs_url)
+            if source.kind == SourceKind.WEB:
+                if source.working_path is None:
+                    raise RuntimeError("Web source does not have a generated docs directory")
+                docs_command = self.docs_mcp.build_generated_docs_scrape_command(
+                    source,
+                    Path(source.working_path),
+                )
+            else:
+                docs_command = self.docs_mcp.build_scrape_command(source, docs_url)
             job.command = docs_command
             job.progress = max(job.progress, 60)
             self._upsert(job)
