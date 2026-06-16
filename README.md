@@ -9,7 +9,7 @@ The wrapper keeps `docs-mcp-server` as the indexing/search engine, uses `crawl4a
 - `backend/` - FastAPI service, job orchestration, local source registry, and adapters around external tools.
 - `frontend/` - React/Vite UI.
 - `backend/data/` - local runtime state owned by the wrapper. Contents are ignored by git.
-- `docs-mcp-server/` - local reference clone, ignored by this repo.
+- `docs-mcp-server/` - local reference clone, ignored by this repo. It is never used at runtime; the backend runs `@arabold/docs-mcp-server` through `npx`.
 
 ## Architecture Direction
 
@@ -27,17 +27,26 @@ Backend:
 
 ```powershell
 cd backend
+python --version
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 fastapi dev
 ```
 
+Use Python 3.12 or 3.13 for the backend. Python 3.14 can currently force
+`lxml`, a transitive `crawl4ai` dependency, to build from source on Windows and
+fail with `Microsoft Visual C++ 14.0 or greater is required`.
+
 Crawl4AI is installed through `backend/requirements.txt`; no separate Crawl4AI clone or setup commands are needed for normal use. If a web crawl fails because Playwright cannot find Chromium, install the browser once:
 
 ```powershell
 python -m playwright install chromium
 ```
+
+Local indexing also requires Node.js with `npx` available. The local
+`docs-mcp-server` clone is reference-only; Context Hub always uses
+`npx -y @arabold/docs-mcp-server@latest`.
 
 Frontend:
 
